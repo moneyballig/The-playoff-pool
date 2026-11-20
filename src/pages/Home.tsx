@@ -138,7 +138,7 @@ export default function Home({ setPage, onJoinClick }: Props) {
             <span className="font-display text-xl font-extrabold italic text-sky-300 sm:text-2xl">NFC</span>
           </div>
           <div className="gridiron-bracket-scroll overflow-x-auto p-4 sm:p-6">
-            <div className="grid min-w-[840px] grid-cols-[1fr_1fr_0.85fr_1fr_1fr] items-center gap-3 lg:gap-5">
+            <div className="grid min-w-[1050px] grid-cols-[1.2fr_1fr_0.8fr_1fr_1.2fr] items-center gap-3 lg:gap-5">
               {(['AFC','AFC','SUPER BOWL','NFC','NFC'] as const).map((c,i)=><div key={i} className="text-center font-display text-xs font-bold uppercase tracking-wider text-amber-200">{i===0||i===4?'Wild Card':i===1||i===3?'Divisional':c}</div>)}
               <div className="space-y-3">{['AFC'].map(conf=><ConferenceSeeds key={conf} conference={conf} teams={teams}/>)}</div>
               <div className="space-y-7"><BracketRound conference="AFC" round="divisional" games={games} teams={teamById}/></div>
@@ -150,7 +150,7 @@ export default function Home({ setPage, onJoinClick }: Props) {
           </div>
         </div>
       </section>
-      <div className="mx-auto max-w-7xl px-4 py-10">
+      <div className="mx-auto max-w-[1500px] px-4 py-5 sm:px-7">\n        <div className="grid gap-4 lg:grid-cols-3">
         {!user && (
           <section className="mb-10">
             <EmptyState
@@ -197,14 +197,14 @@ export default function Home({ setPage, onJoinClick }: Props) {
               {leaders.slice(0, 3).map((row, i) => {
                 const medal = ['text-gold-400', 'text-txt-secondary', 'text-orange-brand'][i];
                 return (
-                  <Card key={row.bracket_id} className="flex items-center gap-4 p-4">
-                    <span className={`flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-navy-900 font-display text-xl font-extrabold ${medal}`}>
+                  <Card key={row.bracket_id} className="flex items-center gap-3 p-3">
+                    <span className={`flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-navy-900 font-display text-xl font-extrabold ${medal}`}>
                       <Medal className="h-5 w-5" />
                     </span>
                     <div className="min-w-0">
                       <p className="truncate font-semibold text-white">{row.display_name ?? 'Participant'}</p>
                       <p className="truncate text-xs text-txt-muted">{row.entry_name}</p>
-                      <p className="font-display text-2xl font-extrabold text-gold-400">{row.total_points} <span className="text-xs text-txt-muted">pts</span></p>
+                      <p className="font-display text-xl font-extrabold text-gold-400">{row.total_points} <span className="text-xs text-txt-muted">pts</span></p>
                     </div>
                   </Card>
                 );
