@@ -142,13 +142,13 @@ export default function Home({ setPage, onJoinClick }: Props) {
       </section>
       <section className="mx-auto max-w-[1500px] px-4 pt-5 sm:px-7">
         <div className="gridiron-panel overflow-hidden rounded-xl border border-amber-300/30">
-          <div className="flex items-center justify-between gap-3 border-b border-amber-300/25 bg-[#08172d] px-4 py-3 sm:px-8">
+          <div className="hidden lg:flex items-center justify-between gap-3 border-b border-amber-300/25 bg-[#08172d] px-4 py-3 sm:px-8">
             <span className="flex items-center gap-2 font-display text-xl font-extrabold italic text-amber-300 sm:text-2xl"><img src="https://a.espncdn.com/i/teamlogos/nfl/500/afc.png" alt="" className="h-8 w-8 object-contain" onError={e=>{e.currentTarget.style.display="none"}}/> AFC</span>
             <h2 className="font-display text-lg font-extrabold uppercase italic tracking-wider text-white sm:text-3xl">NFL Playoff Bracket</h2>
             <span className="flex items-center gap-2 font-display text-xl font-extrabold italic text-sky-300 sm:text-2xl">NFC <img src="https://a.espncdn.com/i/teamlogos/nfl/500/nfc.png" alt="" className="h-8 w-8 object-contain" onError={e=>{e.currentTarget.style.display="none"}}/></span>
           </div>
           <div className="gridiron-mobile-bracket p-3 sm:p-5 lg:hidden">
-<h3 className="mb-3 text-center font-display text-xl font-extrabold text-amber-300">AFC</h3>
+<div className="mb-4 flex justify-center"><img src="https://a.espncdn.com/i/teamlogos/nfl/500/afc.png" alt="AFC" className="h-16 w-16 object-contain" /></div>
 <p className="mb-2 text-center text-xs text-amber-200">WILD CARD</p><MobileWildCard conference="AFC" teams={teams}/>
 <div className="my-3 text-center text-amber-300">↓</div>
 <p className="mb-2 text-center text-xs text-amber-200">DIVISIONAL</p><div className="grid grid-cols-2 gap-2"><BracketRound conference="AFC" round="divisional" games={games} teams={teamById}/></div>
@@ -166,7 +166,7 @@ export default function Home({ setPage, onJoinClick }: Props) {
 <p className="mb-2 text-center text-xs text-sky-200">DIVISIONAL</p><div className="grid grid-cols-2 gap-2"><BracketRound conference="NFC" round="divisional" games={games} teams={teamById}/></div>
 <div className="my-3 text-center text-sky-300">↑</div>
 <p className="mb-2 text-center text-xs text-sky-200">WILD CARD</p><MobileWildCard conference="NFC" teams={teams}/>
-<h3 className="mt-4 text-center font-display text-xl font-extrabold text-sky-300">NFC</h3>
+<div className="mt-4 flex justify-center"><img src="https://a.espncdn.com/i/teamlogos/nfl/500/nfc.png" alt="NFC" className="h-16 w-16 object-contain" /></div>
 </div>
             <div className="gridiron-bracket-scroll hidden overflow-x-auto p-4 sm:p-6 lg:block">
             <div className="grid min-w-[1240px] grid-cols-[1.3fr_1fr_0.9fr_0.85fr_0.9fr_1fr_1.3fr] items-center gap-3 lg:gap-5">
