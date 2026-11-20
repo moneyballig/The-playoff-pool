@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import type { Announcement, Bracket, PlayoffGame, PlayoffTeam, LeaderboardRow } from '@/lib/types';
 import { Card, GoldButton, GhostButton, SectionTitle, StatusPill, TeamLogo, SeedBadge, Spinner, EmptyState } from '@/components/ui';
 import type { PageId } from '@/components/Nav';
+import NFLScoreboard from '@/components/NFLScoreboard';
 
 
 function ConferenceSeeds({conference,teams}:{conference:string;teams:PlayoffTeam[]}) {
@@ -140,6 +141,7 @@ export default function Home({ setPage, onJoinClick }: Props) {
           {user && !pool && <div className="mt-5"><GoldButton onClick={onJoinClick}>Join private pool</GoldButton></div>}
         </div>
       </section>
+      <NFLScoreboard />
       <section className="mx-auto max-w-[1500px] px-4 pt-5 sm:px-7">
         <div className="gridiron-panel overflow-hidden rounded-xl border border-amber-300/30">
           <div className="hidden lg:flex items-center justify-between gap-3 border-b border-amber-300/25 bg-[#08172d] px-4 py-3 sm:px-8">
