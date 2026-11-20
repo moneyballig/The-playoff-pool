@@ -9,6 +9,17 @@ import type { Announcement, Bracket, PlayoffGame, PlayoffTeam, LeaderboardRow } 
 import { Card, GoldButton, GhostButton, SectionTitle, StatusPill, TeamLogo, SeedBadge, Spinner, EmptyState } from '@/components/ui';
 import type { PageId } from '@/components/Nav';
 
+
+function ConferenceSeeds({conference,teams}:{conference:string;teams:PlayoffTeam[]}) {
+ const seeded=teams.filter(t=>t.conference?.toUpperCase()===conference).sort((a,b)=>a.seed-b.seed);
+ const bySeed=(n:number)=>seeded.find(t=>t.seed===n);
+ return <div className="space-y-3">{[[1],[2,7],[3,6],[4,5]].map((pair,i)=><div key={i} className="gridiron-match rounded-lg border border-white/20 p-2">{pair.map(n=><div key={n} className="flex items-center gap-2 border-b border-white/10 py-1.5 last:border-0"><span className="w-4 text-xs font-bold text-amber-300">{n}</span><TeamLogo team={bySeed(n)??null}/><span className="truncate text-xs font-semibold text-white">{bySeed(n)?.name??'TBD'}</span></div>)}{pair.length===1&&<span className="pl-6 text-[10px] uppercase text-amber-200">First-round bye</span>}</div>)}</div>;
+}
+function BracketRound({conference,round,games,teams}:{conference:string;round:string;games:PlayoffGame[];teams:Map<string,PlayoffTeam>}) {
+ const matches=games.filter(g=>g.conference?.toUpperCase()===conference&&String(g.round).toLowerCase().includes(round)).slice(0,2);
+ return <>{[0,1].map(i=>{const g=matches[i];const home=g?.home_team_id?teams.get(g.home_team_id):null;const away=g?.away_team_id?teams.get(g.away_team_id):null;return <div key={i} className="gridiron-match flex min-h-24 flex-col justify-center rounded-lg border border-white/20 p-2">{[away,home].map((t,j)=><div key={j} className="flex items-center gap-2 border-b border-white/10 py-2 last:border-0"><TeamLogo team={t??null}/><span className="truncate text-xs font-semibold text-white">{t?.name??'TBD'}</span></div>)}</div>})}</>;
+}
+
 function useCountdown(target: string | null) {
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
@@ -100,75 +111,45 @@ export default function Home({ setPage, onJoinClick }: Props) {
 
   return (
     <div className="animate-fade-up">
-      {/* HERO */}
-      <section className="relative overflow-hidden border-b border-white/10 bg-stadium-dark stadium-grid">
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-navy-950 to-transparent" />
-        <div className="pointer-events-none absolute -top-24 left-1/2 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-gold-400/10 blur-3xl" />
-        <div className="relative mx-auto max-w-7xl px-4 py-16 text-center sm:py-24">
-          <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-gold-400/30 bg-gold-400/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-gold-400">
-            <Swords className="h-3.5 w-3.5" /> NFL Playoffs {pool?.season ?? 2026}
-          </p>
-          <h1 className="font-display text-5xl font-extrabold uppercase leading-[1.05] tracking-wide text-white sm:text-7xl">
-            The Playoff <span className="text-gold-400 text-glow-gold">Pool</span>
-          </h1>
-          <p className="mx-auto mt-4 max-w-xl text-base text-txt-secondary sm:text-lg">
-            Predict every snap of the postseason. Two brackets, thirteen picks, one champion.
-            Beat your friends to the {pool?.name ?? 'grand prize'}.
-          </p>
-
-          {countdown && !countdown.over && (
-            <div className="mt-8 flex items-stretch justify-center gap-2 sm:gap-3">
-              {[
-                { v: countdown.days, l: 'Days' },
-                { v: countdown.hours, l: 'Hrs' },
-                { v: countdown.mins, l: 'Min' },
-                { v: countdown.secs, l: 'Sec' },
-              ].map((u) => (
-                <div key={u.l} className="w-20 rounded-xl border border-white/10 bg-navy-900/80 px-2 py-3 shadow-card sm:w-24">
-                  <p className="font-display text-3xl font-extrabold text-gold-400 sm:text-4xl">{String(u.v).padStart(2, '0')}</p>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-txt-muted">{u.l}</p>
-                </div>
-              ))}
+      {/* STADIUM HERO — live pool data only */}
+      <section className="gridiron-hero relative overflow-hidden border-b border-amber-400/25">
+        <div className="gridiron-hero-shade absolute inset-0" />
+        <div className="relative mx-auto max-w-[1500px] px-4 pb-8 pt-12 sm:px-7 sm:pt-16">
+          <p className="font-display text-sm font-bold uppercase tracking-[0.3em] text-amber-300">The road to the championship</p>
+          <h1 className="gridiron-title mt-3 font-display text-5xl font-extrabold uppercase leading-none text-white sm:text-7xl lg:text-8xl">{pool?.season ?? 2026} NFL PLAYOFFS</h1>
+          <p className="gridiron-subtitle mt-2 font-display text-xl font-bold uppercase tracking-wider text-amber-300 sm:text-3xl">Make your picks. Claim the glory.</p>
+          <div className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-amber-300/30 bg-[#030a18]/85 p-4 shadow-2xl backdrop-blur-md">
+            <div className="flex flex-wrap items-center gap-5 sm:gap-9">
+              <div className="flex items-center gap-3"><Users className="h-7 w-7 text-amber-300"/><div><strong className="block text-xl text-white">{pool ? members : '—'}</strong><span className="text-xs text-slate-300">Participants</span></div></div>
+              <div className="flex items-center gap-3"><FileText className="h-7 w-7 text-amber-300"/><div><strong className="block text-xl text-white">{pool ? submitted : '—'}</strong><span className="text-xs text-slate-300">Leaderboard entries</span></div></div>
+              <div className="flex items-center gap-3"><Clock className="h-7 w-7 text-amber-300"/><div><strong className="block text-sm text-white">{pool?.deadline ? new Date(pool.deadline).toLocaleString(undefined,{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}) : 'Not set'}</strong><span className="text-xs text-slate-300">Pool deadline</span></div></div>
             </div>
-          )}
-          {countdown?.over && (
-            <p className="mt-6 inline-flex items-center gap-2 rounded-full border border-livered/30 bg-livered/10 px-4 py-1.5 text-sm font-semibold text-livered">
-              <Lock className="h-4 w-4" /> The playoffs are underway
-            </p>
-          )}
-
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            {!user && (
-              <GoldButton onClick={onJoinClick} className="w-full sm:w-auto">
-                <Trophy className="h-5 w-5" /> Enter the pool
-              </GoldButton>
-            )}
-            {user && !pool && (
-              <GoldButton onClick={onJoinClick} className="w-full sm:w-auto">
-                <Trophy className="h-5 w-5" /> Join with invitation code
-              </GoldButton>
-            )}
-            {user && pool && (
-              <GoldButton onClick={() => setPage('entries')} className="w-full sm:w-auto">
-                <FileText className="h-5 w-5" /> View my brackets
-              </GoldButton>
-            )}
+            {countdown && !countdown.over ? <div className="rounded-lg border border-amber-400/40 bg-black/75 px-5 py-2 text-center"><p className="text-[11px] font-bold uppercase tracking-widest text-amber-300">Playoffs kickoff in</p><div className="mt-1 flex gap-3">{[{v:countdown.days,l:'DAYS'},{v:countdown.hours,l:'HRS'},{v:countdown.mins,l:'MIN'},{v:countdown.secs,l:'SEC'}].map(t=><div key={t.l}><strong className="block font-display text-2xl text-white">{String(t.v).padStart(2,'0')}</strong><span className="text-[9px] text-amber-300">{t.l}</span></div>)}</div></div> : <div className="rounded-lg border border-amber-400/30 px-4 py-2 text-sm text-amber-200">{countdown?.over ? 'Playoffs underway' : 'Kickoff schedule pending'}</div>}
           </div>
-
-          {pool && (
-            <div className="mx-auto mt-8 flex max-w-2xl flex-wrap items-center justify-center gap-x-8 gap-y-2 text-sm text-txt-secondary">
-              <span className="inline-flex items-center gap-1.5"><Users className="h-4 w-4 text-gold-400" /> {members} participants</span>
-              <span className="inline-flex items-center gap-1.5"><FileText className="h-4 w-4 text-gold-400" /> {submitted} entries submitted</span>
-              {pool.deadline && (
-                <span className={`inline-flex items-center gap-1.5 ${deadlinePassed ? 'text-livered' : 'text-gold-400'}`}>
-                  <Clock className="h-4 w-4" /> Deadline {new Date(pool.deadline).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
-                </span>
-              )}
-            </div>
-          )}
+          {!user && <div className="mt-5"><GoldButton onClick={onJoinClick}><Trophy className="h-4 w-4"/> Sign in / Enter pool</GoldButton></div>}
+          {user && !pool && <div className="mt-5"><GoldButton onClick={onJoinClick}>Join private pool</GoldButton></div>}
         </div>
       </section>
-
+      <section className="mx-auto max-w-[1500px] px-4 pt-5 sm:px-7">
+        <div className="gridiron-panel overflow-hidden rounded-xl border border-amber-300/30">
+          <div className="flex items-center justify-between gap-3 border-b border-amber-300/25 bg-[#08172d] px-4 py-3 sm:px-8">
+            <span className="font-display text-xl font-extrabold italic text-amber-300 sm:text-2xl">AFC</span>
+            <h2 className="font-display text-lg font-extrabold uppercase italic tracking-wider text-white sm:text-3xl">NFL Playoff Bracket</h2>
+            <span className="font-display text-xl font-extrabold italic text-sky-300 sm:text-2xl">NFC</span>
+          </div>
+          <div className="gridiron-bracket-scroll overflow-x-auto p-4 sm:p-6">
+            <div className="grid min-w-[840px] grid-cols-[1fr_1fr_0.85fr_1fr_1fr] items-center gap-3 lg:gap-5">
+              {(['AFC','AFC','SUPER BOWL','NFC','NFC'] as const).map((c,i)=><div key={i} className="text-center font-display text-xs font-bold uppercase tracking-wider text-amber-200">{i===0||i===4?'Wild Card':i===1||i===3?'Divisional':c}</div>)}
+              <div className="space-y-3">{['AFC'].map(conf=><ConferenceSeeds key={conf} conference={conf} teams={teams}/>)}</div>
+              <div className="space-y-7"><BracketRound conference="AFC" round="divisional" games={games} teams={teamById}/></div>
+              <div className="flex flex-col items-center justify-center gap-5"><Trophy className="h-20 w-20 text-amber-300 drop-shadow-[0_0_20px_rgba(251,191,36,.45)]"/><div className="rounded-lg border border-amber-400/60 bg-amber-400/10 px-4 py-2 text-center font-display text-xl font-extrabold uppercase text-amber-200">Super Bowl</div><button onClick={()=>setPage('bracket')} className="rounded-md border border-amber-300/50 px-4 py-2 text-xs font-bold text-amber-200 hover:bg-amber-400/10">View bracket →</button></div>
+              <div className="space-y-7"><BracketRound conference="NFC" round="divisional" games={games} teams={teamById}/></div>
+              <div className="space-y-3"><ConferenceSeeds conference="NFC" teams={teams}/></div>
+            </div>
+            <p className="mt-5 text-center text-xs text-slate-400">Bracket shows actual configured playoff seeds and games. Empty slots remain TBD until set by the pool administrator.</p>
+          </div>
+        </div>
+      </section>
       <div className="mx-auto max-w-7xl px-4 py-10">
         {!user && (
           <section className="mb-10">
