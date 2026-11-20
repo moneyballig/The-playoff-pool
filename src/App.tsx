@@ -55,16 +55,14 @@ function EntriesPage({ onOpenBracket, onJoin }: { onOpenBracket: (id: string) =>
     setCreating(true);
     setError('');
     const nextNumber = brackets.length === 0 ? 1 : 2;
-    const { data, error: insertError } = await supabase
-      .from('brackets')
-      .insert({ pool_id: pool.id, user_id: user.id, entry_number: nextNumber, name: `Bracket ${nextNumber}` })
-      .select('*')
-      .single();
+    const { data: createdId, error: insertError } = await supabase.rpc('pp_create_bracket', {
+      p_pool: pool.id, p_entry: nextNumber, p_name: `Bracket ${nextNumber}`
+    });
     if (insertError) setError(insertError.message);
-    else if (data) {
-      const created = data as Bracket;
-      setBrackets((current) => [...current, created]);
-      onOpenBracket(created.id);
+    else if (createdId) {
+      const { data: created, error: fetchError } = await supabase.from('brackets').select('*').eq('id',createdId).single();
+      if (fetchError) setError(fetchError.message);
+      else if (created) {setBrackets(current=>[...current,created as Bracket]);onOpenBracket(created.id);}
     }
     setCreating(false);
   };
