@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
-import { supabase } from './supabase';
+import { supabase, supabaseConfigured } from './supabase';
 import type { Profile, Pool } from './types';
 
 interface AuthState {
@@ -61,6 +61,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    if (!supabaseConfigured) {
+      setLoading(false);
+      return;
+    }
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       loadUserData(data.session?.user ?? null).finally(() => setLoading(false));
@@ -79,6 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string, displayName: string) => {
+    if (!supabaseConfigured) return { error: 'Pool sign-in is not connected yet. The site owner must connect the Supabase backend first.' };
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -90,6 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
+    if (!supabaseConfigured) return { error: 'Pool sign-in is not connected yet. The site owner must connect the Supabase backend first.' };
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error: error ? error.message : null };
   };
@@ -104,6 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const joinPool = async (code: string) => {
+    if (!supabaseConfigured) return { error: 'Pool invitations are unavailable until the Supabase backend is connected.' };
     const { error } = await supabase.rpc('pp_join_pool', { p_code: code });
     if (error) return { error: error.message };
     await loadUserData(session?.user ?? null);
