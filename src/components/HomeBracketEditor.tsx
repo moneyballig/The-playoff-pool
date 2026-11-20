@@ -22,6 +22,7 @@ export default function HomeBracketEditor({teams,games,brackets,onJoinClick,onEn
  const [selected,setSelected]=useState('');
  const [picks,setPicks]=useState<PickMap>({});
  const [busy,setBusy]=useState(false);
+ const [submittedIds,setSubmittedIds]=useState<string[]>([]);
  const [error,setError]=useState('');
  const [notice,setNotice]=useState('');
  const [tiebreaker,setTiebreaker]=useState('');
@@ -55,6 +56,7 @@ export default function HomeBracketEditor({teams,games,brackets,onJoinClick,onEn
    if(payload.length!==13){setError('Choose all 13 winners before submitting.');setBusy(false);return;}
    const {error:submitError}=await supabase.rpc('pp_submit_bracket',{p_bracket:active.id,p_tiebreaker:tiebreaker.trim()?Number(tiebreaker):null});
    if(submitError){setError(submitError.message);setBusy(false);return;}
+   setSubmittedIds(ids=>ids.includes(active.id)?ids:[...ids,active.id]);
    setNotice('Bracket submitted! You can edit and resubmit until the deadline.');
   }else setNotice('Picks saved successfully.');
   setBusy(false);
@@ -69,9 +71,9 @@ export default function HomeBracketEditor({teams,games,brackets,onJoinClick,onEn
    <div className="border-b border-white/10 bg-[#08172d]/80 px-4 py-4 sm:px-8">
     {!user?<GoldButton onClick={onJoinClick}>Sign in to make your picks</GoldButton>:!pool?<GoldButton onClick={onJoinClick}>Join a pool to make picks</GoldButton>:brackets.length===0?<GoldButton onClick={onEntries}>Create your first bracket</GoldButton>:<div className="flex flex-wrap items-center gap-3">
      <label htmlFor="home-bracket-entry" className="text-sm font-bold text-white">Your entry</label>
-     <select id="home-bracket-entry" className="min-w-40 rounded-lg border border-amber-300/40 bg-[#0b1c35] px-3 py-2 text-sm text-white" value={active?.id??''} onChange={e=>setSelected(e.target.value)}>{brackets.map(b=><option key={b.id} value={b.id}>{b.name}{b.submitted?' (Submitted)':''}</option>)}</select>
+     <select id="home-bracket-entry" className="min-w-40 rounded-lg border border-amber-300/40 bg-[#0b1c35] px-3 py-2 text-sm text-white" value={active?.id??''} onChange={e=>setSelected(e.target.value)}>{brackets.map(b=><option key={b.id} value={b.id}>{b.name}{b.submitted||submittedIds.includes(b.id)?' (Submitted)':''}</option>)}</select>
      <span className="text-sm text-amber-200">{count}/13 picks</span>
-     {active?.submitted&&<span className="rounded-full border border-green-500/30 px-2 py-1 text-xs text-green-300">Submitted · editable before deadline</span>}
+     {(active?.submitted||submittedIds.includes(active?.id??''))&&<span className="rounded-full border border-green-500/30 px-2 py-1 text-xs text-green-300">Submitted · editable before deadline</span>}
      {locked&&<span className="text-sm font-bold text-red-300">Deadline passed · picks locked</span>}
      <GoldButton onClick={onEntries}>Manage entries</GoldButton>
     </div>}
@@ -95,7 +97,7 @@ export default function HomeBracketEditor({teams,games,brackets,onJoinClick,onEn
    </div>}
    {active&&<div className="flex flex-wrap items-center justify-between gap-3 border-t border-amber-300/25 bg-[#08172d] p-4 sm:px-8">
     <label className="flex items-center gap-2 text-sm text-white">Super Bowl total points tiebreaker <input aria-label="Super Bowl total points tiebreaker" type="number" min="0" max="200" className="w-20 rounded-md border border-white/20 bg-[#0b1c35] px-2 py-2 text-white" value={tiebreaker} disabled={locked} onChange={e=>setTiebreaker(e.target.value)}/></label>
-    <div className="flex flex-wrap gap-3"><button type="button" disabled={locked||busy} onClick={()=>void persist(false)} className="inline-flex items-center gap-2 rounded-lg border border-amber-300/50 px-4 py-2 text-sm font-bold text-amber-200 disabled:opacity-40"><Save className="h-4 w-4"/>Save picks</button><GoldButton disabled={locked||busy||count!==13} onClick={()=>void persist(true)}><Trophy className="h-4 w-4"/>{active.submitted?'Resubmit bracket':'Submit bracket'}</GoldButton></div>
+    <div className="flex flex-wrap gap-3"><button type="button" disabled={locked||busy} onClick={()=>void persist(false)} className="inline-flex items-center gap-2 rounded-lg border border-amber-300/50 px-4 py-2 text-sm font-bold text-amber-200 disabled:opacity-40"><Save className="h-4 w-4"/>Save picks</button><GoldButton disabled={locked||busy||count!==13} onClick={()=>void persist(true)}><Trophy className="h-4 w-4"/>{active.submitted||submittedIds.includes(active.id)?'Resubmit bracket':'Submit bracket'}</GoldButton></div>
    </div>}
   </div>
  </section>;
