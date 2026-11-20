@@ -21,7 +21,8 @@ export function TeamLogo({ team, size = 36 }: { team: PlayoffTeam | null; size?:
       </div>
     );
   }
-  const initials = team.abbreviation.slice(0, 3);\n  const logo = team.logo_url || `https://a.espncdn.com/i/teamlogos/nfl/500/${team.abbreviation.toLowerCase()}.png`;
+  const initials = team.abbreviation.slice(0, 3);
+  const logo = team.logo_url || `https://a.espncdn.com/i/teamlogos/nfl/500/${team.abbreviation.toLowerCase()}.png`;
   return (
     <div
       className="team-logo rounded-full flex items-center justify-center font-display font-bold shrink-0 border"
@@ -34,7 +35,7 @@ export function TeamLogo({ team, size = 36 }: { team: PlayoffTeam | null; size?:
         color: '#fff',
       }}
     >
-      {initials}
+      <img src={logo} alt={`${team.name} logo`} className="h-full w-full object-contain p-0.5" onError={(e) => { e.currentTarget.style.display = "none"; e.currentTarget.parentElement?.setAttribute("data-fallback", initials); }} />
     </div>
   );
 }
