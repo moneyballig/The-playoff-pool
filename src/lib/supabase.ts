@@ -1,12 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-anon-key';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://beoosdupvsftozuadqqt';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_l6dR8CioYmoc12MeBbh-mA_g-smTGzR';
 
-export const supabaseConfigured = Boolean(
-  import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+export const supabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
-// The public frontend can render without credentials. Authentication and shared
-// pool data become available after the owner adds their Supabase project keys.
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
