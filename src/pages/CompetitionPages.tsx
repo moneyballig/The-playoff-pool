@@ -60,7 +60,7 @@ export function SchedulePage() {
   const byId = useMemo(() => new Map(teams.map(t => [t.id,t])), [teams]);
   if (!pool) return <PageShell title="NFL Playoff Schedule" eyebrow="Game center"><EmptyState title="Private pool access" body="Sign in and join your pool to see its playoff schedule." /></PageShell>;
   if (busy) return <Spinner label="Loading playoff schedule…" />;
-  return <PageShell title="NFL Playoff Schedule" eyebrow={`Game center · ${pool.season}`}>
+  return <PageShell title="NFL Playoff Schedule" eyebrow={`Game center · ${pool.season}-27`}>
     <Card className="mb-6 p-5">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><h2 className="font-display text-lg font-bold uppercase text-white">Live NFL playoff scores</h2><span className="inline-flex items-center gap-2 text-xs text-txt-muted"><span className="h-2 w-2 rounded-full bg-correct"/> ESPN feed · refreshes every 30 seconds</span></div>
       {updatedAt && <p className="mb-3 text-[11px] text-txt-muted">Last updated {updatedAt.toLocaleTimeString()}</p>}
