@@ -133,16 +133,16 @@ export default function Home({ setPage, onJoinClick }: Props) {
       <section className="mx-auto max-w-[1500px] px-4 pt-5 sm:px-7">
         <div className="gridiron-panel overflow-hidden rounded-xl border border-amber-300/30">
           <div className="flex items-center justify-between gap-3 border-b border-amber-300/25 bg-[#08172d] px-4 py-3 sm:px-8">
-            <span className="font-display text-xl font-extrabold italic text-amber-300 sm:text-2xl">AFC</span>
+            <span className="flex items-center gap-2 font-display text-xl font-extrabold italic text-amber-300 sm:text-2xl"><img src="https://a.espncdn.com/i/teamlogos/nfl/500/afc.png" alt="" className="h-8 w-8 object-contain" onError={e=>{e.currentTarget.style.display="none"}}/> AFC</span>
             <h2 className="font-display text-lg font-extrabold uppercase italic tracking-wider text-white sm:text-3xl">NFL Playoff Bracket</h2>
-            <span className="font-display text-xl font-extrabold italic text-sky-300 sm:text-2xl">NFC</span>
+            <span className="flex items-center gap-2 font-display text-xl font-extrabold italic text-sky-300 sm:text-2xl">NFC <img src="https://a.espncdn.com/i/teamlogos/nfl/500/nfc.png" alt="" className="h-8 w-8 object-contain" onError={e=>{e.currentTarget.style.display="none"}}/></span>
           </div>
           <div className="gridiron-bracket-scroll overflow-x-auto p-4 sm:p-6">
             <div className="grid min-w-[1240px] grid-cols-[1.3fr_1fr_0.9fr_0.85fr_0.9fr_1fr_1.3fr] items-center gap-3 lg:gap-5">
               {(['Wild Card','Divisional','Conference Championship','Super Bowl','Conference Championship','Divisional','Wild Card'] as const).map((c,i)=><div key={i} className="text-center font-display text-xs font-bold uppercase tracking-wider text-amber-200">{c}</div>)}
               <div className="space-y-3">{['AFC'].map(conf=><ConferenceSeeds key={conf} conference={conf} teams={teams}/>)}</div>
               <div className="space-y-7"><BracketRound conference="AFC" round="divisional" games={games} teams={teamById}/></div>\n              <div className="pt-8"><BracketRound conference="AFC" round="conference" games={games} teams={teamById}/></div>
-              <div className="flex flex-col items-center justify-center gap-5"><Trophy className="h-20 w-20 text-amber-300 drop-shadow-[0_0_20px_rgba(251,191,36,.45)]"/><div className="rounded-lg border border-amber-400/60 bg-amber-400/10 px-4 py-2 text-center font-display text-xl font-extrabold uppercase text-amber-200">Super Bowl</div><button onClick={()=>setPage('bracket')} className="rounded-md border border-amber-300/50 px-4 py-2 text-xs font-bold text-amber-200 hover:bg-amber-400/10">View bracket →</button></div>
+              <div className="flex flex-col items-center justify-center gap-5"><img src="https://upload.wikimedia.org/wikipedia/en/a/a7/Vince_Lombardi_Trophy.png" alt="Vince Lombardi Trophy" className="h-28 w-auto object-contain drop-shadow-[0_0_20px_rgba(251,191,36,.45)]" onError={e=>{e.currentTarget.style.display="none"}}/><div className="rounded-lg border border-amber-400/60 bg-amber-400/10 px-4 py-2 text-center font-display text-xl font-extrabold uppercase text-amber-200">Super Bowl</div><button onClick={()=>setPage('bracket')} className="rounded-md border border-amber-300/50 px-4 py-2 text-xs font-bold text-amber-200 hover:bg-amber-400/10">View bracket →</button></div>
               <div className="pt-8"><BracketRound conference="NFC" round="conference" games={games} teams={teamById}/></div>\n              <div className="space-y-7"><BracketRound conference="NFC" round="divisional" games={games} teams={teamById}/></div>
               <div className="space-y-3"><ConferenceSeeds conference="NFC" teams={teams}/></div>
             </div>
