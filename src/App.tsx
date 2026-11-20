@@ -86,7 +86,7 @@ function EntriesPage({ onOpenBracket, onJoin }: { onOpenBracket: (id: string) =>
   }, [user, pool]);
 
   const renameBracket = async (bracket: Bracket) => {
-    if (bracket.frozen || bracket.submitted) return;
+    if (pool?.deadline && Date.now() >= new Date(pool.deadline).getTime()) return;
     const name = window.prompt('Name your bracket', bracket.name)?.trim();
     if (!name || name === bracket.name || name.length > 50) return;
     const { error: renameError } = await supabase.from('brackets').update({name}).eq('id',bracket.id).eq('user_id',user!.id);
@@ -135,12 +135,12 @@ function EntriesPage({ onOpenBracket, onJoin }: { onOpenBracket: (id: string) =>
             <Card key={bracket.id} className="p-5">
               <div className="flex items-center justify-between"><span className="rounded-lg bg-gold-400/10 p-2 text-gold-400"><Trophy className="h-5 w-5" /></span><span className="text-xs font-semibold uppercase tracking-wider text-txt-muted">{bracket.submitted ? 'Submitted' : bracket.frozen ? 'Locked' : 'Draft'}</span></div>
               <h2 className="mt-4 font-display text-xl font-bold uppercase text-white">{bracket.name}</h2>
-              {!bracket.frozen && !bracket.submitted && <button type="button" onClick={()=>void renameBracket(bracket)} className="mt-1 text-xs text-gold-400 underline underline-offset-2 hover:text-gold-300">Rename bracket</button>}
+              {(!pool?.deadline || Date.now() < new Date(pool.deadline).getTime()) && <button type="button" onClick={()=>void renameBracket(bracket)} className="mt-1 text-xs text-gold-400 underline underline-offset-2 hover:text-gold-300">Rename bracket</button>}
               <p className="mt-1 text-sm text-txt-secondary">{bracket.total_points} points · {bracket.correct_picks} correct picks {bracket.rank?` · Rank #${bracket.rank}`:''}</p>
                <div className="mt-4"><div className="mb-1.5 flex justify-between text-[11px] font-semibold text-txt-secondary"><span>Predictions saved</span><span>{pickCounts[bracket.id]??0}/13</span></div><div className="h-2 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-gold-400 transition-all" style={{width:Math.min(100,(pickCounts[bracket.id]??0)/13*100)+'%'}}/></div></div>
                {bracket.submitted && <p className="mt-3 text-xs text-txt-secondary">{eliminatedCounts[bracket.id]??0} confirmed incorrect picks from finalized games · {bracket.correct_picks} correct</p>}
                {bracket.submitted && <p className="mt-1 text-xs text-gold-400">Maximum possible points: {maxPossible[bracket.id]??bracket.total_points} (based on remaining viable picks)</p>}
-              <div className="mt-5"><GoldButton className="w-full" onClick={() => onOpenBracket(bracket.id)}><FileText className="h-4 w-4" />{bracket.submitted ? 'View bracket' : 'Open bracket'}<ChevronRight className="h-4 w-4" /></GoldButton></div>
+              <div className="mt-5"><GoldButton className="w-full" onClick={() => onOpenBracket(bracket.id)}><FileText className="h-4 w-4" />{bracket.submitted && (!pool?.deadline || Date.now() < new Date(pool.deadline).getTime()) ? 'Edit submitted bracket' : bracket.submitted ? 'View bracket' : 'Open bracket'}<ChevronRight className="h-4 w-4" /></GoldButton></div>
             </Card>
           ))}
         </div>
