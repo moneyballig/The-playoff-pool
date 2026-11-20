@@ -137,7 +137,33 @@ export default function Home({ setPage, onJoinClick }: Props) {
             <h2 className="font-display text-lg font-extrabold uppercase italic tracking-wider text-white sm:text-3xl">NFL Playoff Bracket</h2>
             <span className="flex items-center gap-2 font-display text-xl font-extrabold italic text-sky-300 sm:text-2xl">NFC <img src="https://a.espncdn.com/i/teamlogos/nfl/500/nfc.png" alt="" className="h-8 w-8 object-contain" onError={e=>{e.currentTarget.style.display="none"}}/></span>
           </div>
-          <div className="gridiron-bracket-scroll overflow-x-auto p-4 sm:p-6">
+          <div className="gridiron-mobile-bracket p-3 sm:p-5 lg:hidden">
+              <div className="mb-3 text-center font-display text-xl font-extrabold italic text-amber-300">AFC PLAYOFF BRACKET</div>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="text-center text-[10px] font-bold uppercase text-amber-200">Wild Card</div>
+                <div className="text-center text-[10px] font-bold uppercase text-amber-200">Divisional</div>
+                <div className="text-center text-[10px] font-bold uppercase text-amber-200">Conference</div>
+                <div><ConferenceSeeds conference="AFC" teams={teams}/></div>
+                <div className="flex flex-col justify-around gap-3"><BracketRound conference="AFC" round="divisional" games={games} teams={teamById}/></div>
+                <div className="flex flex-col justify-center"><BracketRound conference="AFC" round="conference" games={games} teams={teamById}/></div>
+              </div>
+              <div className="my-6 flex flex-col items-center gap-2 border-y border-amber-400/30 py-6">
+                <Trophy className="h-16 w-16 text-amber-300"/>
+                <span className="font-display text-2xl font-extrabold uppercase text-amber-200">Super Bowl</span>
+                <button onClick={()=>setPage('bracket')} className="rounded-md border border-amber-300/50 px-4 py-2 text-xs font-bold text-amber-200">View bracket →</button>
+              </div>
+              <div className="mb-3 text-center font-display text-xl font-extrabold italic text-sky-300">NFC PLAYOFF BRACKET</div>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="text-center text-[10px] font-bold uppercase text-sky-200">Conference</div>
+                <div className="text-center text-[10px] font-bold uppercase text-sky-200">Divisional</div>
+                <div className="text-center text-[10px] font-bold uppercase text-sky-200">Wild Card</div>
+                <div className="flex flex-col justify-center"><BracketRound conference="NFC" round="conference" games={games} teams={teamById}/></div>
+                <div className="flex flex-col justify-around gap-3"><BracketRound conference="NFC" round="divisional" games={games} teams={teamById}/></div>
+                <div><ConferenceSeeds conference="NFC" teams={teams}/></div>
+              </div>
+              <p className="mt-4 text-center text-xs text-slate-400">Teams and matchups update from your pool's playoff data.</p>
+            </div>
+            <div className="gridiron-bracket-scroll hidden overflow-x-auto p-4 sm:p-6 lg:block">
             <div className="grid min-w-[1240px] grid-cols-[1.3fr_1fr_0.9fr_0.85fr_0.9fr_1fr_1.3fr] items-center gap-3 lg:gap-5">
               {(['Wild Card','Divisional','Conference Championship','Super Bowl','Conference Championship','Divisional','Wild Card'] as const).map((c,i)=><div key={i} className="text-center font-display text-xs font-bold uppercase tracking-wider text-amber-200">{c}</div>)}
               <div className="space-y-3">{['AFC'].map(conf=><ConferenceSeeds key={conf} conference={conf} teams={teams}/>)}</div>
