@@ -6,7 +6,6 @@ export type PageId = 'home' | 'bracket' | 'entries' | 'leaderboard' | 'schedule'
 
 const NAV_ITEMS: { id: PageId; label: string; icon: typeof Trophy }[] = [
   { id: 'home', label: 'Home', icon: LayoutGrid },
-  { id: 'bracket', label: 'Playoff Bracket', icon: Trophy },
   { id: 'entries', label: 'My Entries', icon: FileText },
   { id: 'leaderboard', label: 'Leaderboard', icon: ListOrdered },
   { id: 'schedule', label: 'NFL Playoff Schedule', icon: CalendarDays },
