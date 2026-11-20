@@ -378,10 +378,11 @@ export default function BracketPage({ bracketId, onOpenEntries }: Props) {
             <ChevronRight className="h-5 w-5" />
           </button>
         </div>
-        <p className="mb-3 text-center font-display text-lg font-bold uppercase tracking-[0.2em] text-gold-400">
+        <p className="mb-1 text-center font-display text-lg font-bold uppercase tracking-[0.2em] text-gold-400">
           {mobileRounds[mobileRound].label}
         </p>
-        <div className="flex flex-col gap-3">
+        <p className="mb-4 text-center text-xs text-txt-secondary">Round {mobileRound+1} of 4 · {mobileRounds[mobileRound].cols.flat().filter(m=>m.winner).length}/{mobileRounds[mobileRound].cols.flat().length} winners selected</p>
+        <div className="flex flex-col gap-3 border-l-2 border-gold-400/25 pl-3">
           {mobileRounds[mobileRound].cols.flat().map((m) => (
             <MatchupCard key={m.key} m={m} disabled={locked} onPick={handlePick} />
           ))}
