@@ -141,16 +141,19 @@ export default function Home({ setPage, onJoinClick }: Props) {
             <div className="grid min-w-[1240px] grid-cols-[1.3fr_1fr_0.9fr_0.85fr_0.9fr_1fr_1.3fr] items-center gap-3 lg:gap-5">
               {(['Wild Card','Divisional','Conference Championship','Super Bowl','Conference Championship','Divisional','Wild Card'] as const).map((c,i)=><div key={i} className="text-center font-display text-xs font-bold uppercase tracking-wider text-amber-200">{c}</div>)}
               <div className="space-y-3">{['AFC'].map(conf=><ConferenceSeeds key={conf} conference={conf} teams={teams}/>)}</div>
-              <div className="space-y-7"><BracketRound conference="AFC" round="divisional" games={games} teams={teamById}/></div>\n              <div className="pt-8"><BracketRound conference="AFC" round="conference" games={games} teams={teamById}/></div>
+              <div className="space-y-7"><BracketRound conference="AFC" round="divisional" games={games} teams={teamById}/></div>
+              <div className="pt-8"><BracketRound conference="AFC" round="conference" games={games} teams={teamById}/></div>
               <div className="flex flex-col items-center justify-center gap-5"><svg viewBox="0 0 110 170" role="img" aria-label="Vince Lombardi Trophy silhouette" className="h-32 w-24 drop-shadow-[0_0_18px_rgba(251,191,36,.45)]"><defs><linearGradient id="silverTrophy" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#ffffff"/><stop offset=".38" stopColor="#9eafc7"/><stop offset=".65" stopColor="#f6f7fb"/><stop offset="1" stopColor="#58677c"/></linearGradient></defs><g fill="url(#silverTrophy)" stroke="#dce7f5" strokeWidth="1.5"><ellipse cx="62" cy="32" rx="23" ry="39" transform="rotate(43 62 32)"/><path d="M47 65 L65 65 L76 143 L35 143 Z"/><path d="M35 143 H76 L84 158 H27 Z"/></g><path d="M42 19 Q63 36 83 46 M47 13 Q67 29 88 39 M41 25 Q61 43 79 52" fill="none" stroke="#56667e" strokeWidth="2"/></svg><div className="rounded-lg border border-amber-400/60 bg-amber-400/10 px-4 py-2 text-center font-display text-xl font-extrabold uppercase text-amber-200">Super Bowl</div><button onClick={()=>setPage('bracket')} className="rounded-md border border-amber-300/50 px-4 py-2 text-xs font-bold text-amber-200 hover:bg-amber-400/10">View bracket →</button></div>
-              <div className="pt-8"><BracketRound conference="NFC" round="conference" games={games} teams={teamById}/></div>\n              <div className="space-y-7"><BracketRound conference="NFC" round="divisional" games={games} teams={teamById}/></div>
+              <div className="pt-8"><BracketRound conference="NFC" round="conference" games={games} teams={teamById}/></div>
+              <div className="space-y-7"><BracketRound conference="NFC" round="divisional" games={games} teams={teamById}/></div>
               <div className="space-y-3"><ConferenceSeeds conference="NFC" teams={teams}/></div>
             </div>
             <p className="mt-5 text-center text-xs text-slate-400">Bracket shows actual configured playoff seeds and games. Empty slots remain TBD until set by the pool administrator.</p>
           </div>
         </div>
       </section>
-      <div className="mx-auto max-w-[1500px] px-4 py-5 sm:px-7">\n        <div className="grid gap-4 lg:grid-cols-3">
+      <div className="mx-auto max-w-[1500px] px-4 py-5 sm:px-7">
+        <div className="grid gap-4 lg:grid-cols-3">
         {!user && (
           <section className="mb-10">
             <EmptyState
