@@ -36,6 +36,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsPlatformAdmin(false);
       return;
     }
+    // The first authenticated account claims platform admin after email verification.
+    await supabase.rpc('pp_claim_admin');
+
     const { data: prof } = await supabase
       .from('profiles')
       .select('*')
