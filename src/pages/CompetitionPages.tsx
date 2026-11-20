@@ -14,20 +14,30 @@ export function LeaderboardPage() {
   const { pool } = useAuth();
   const [rows, setRows] = useState<LeaderboardRow[]>([]);
   const [busy, setBusy] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date|null>(null);
+  const [rankChanges, setRankChanges] = useState<Record<string,number>>({});
   useEffect(() => {
-    let live = true;
     if (!pool) { setBusy(false); return; }
-    supabase.rpc('pp_leaderboard', { p_pool: pool.id }).then(({ data }) => {
-      if (live) { setRows((data as LeaderboardRow[]) ?? []); setBusy(false); }
-    });
-    return () => { live = false; };
+    let live = true;
+    let previous: LeaderboardRow[] | null = null;
+    const load = async () => {
+      const {data,error}=await supabase.rpc('pp_leaderboard',{p_pool:pool.id});
+      if(!live)return;
+      if(!error){const next=(data as LeaderboardRow[])??[];
+       if(previous){const old=new Map(previous.map((r,i)=>[r.bracket_id,r.rank??i+1]));const changes:Record<string,number>={};next.forEach((r,i)=>{const before=old.get(r.bracket_id);if(before!==undefined)changes[r.bracket_id]=before-(r.rank??i+1)});setRankChanges(changes)}
+       previous=next;setRows(next);setLastUpdated(new Date());}
+      setBusy(false);
+    };
+    void load();const timer=window.setInterval(()=>void load(),60000);
+    return ()=>{live=false;window.clearInterval(timer)};
   }, [pool]);
   if (!pool) return <PageShell title="Leaderboard" eyebrow="Standings"><EmptyState title="Private pool access" body="Sign in and join your private pool to see standings." /></PageShell>;
   if (busy) return <Spinner label="Loading standings…" />;
   return <PageShell title="Leaderboard" eyebrow={`NFL Playoffs · ${pool.season}`}>
+    <p className="mb-3 text-xs text-txt-muted">Standings refresh every minute{lastUpdated?' · Updated '+lastUpdated.toLocaleTimeString():''}. Movement compares with the previous refresh.</p>
     <Card className="overflow-hidden p-0">
       <div className="grid grid-cols-[48px_1fr_70px_70px] gap-2 border-b border-white/10 bg-white/5 px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-txt-muted sm:grid-cols-[60px_1fr_100px_100px_100px]"><span>Rank</span><span>Entry</span><span className="text-right">Points</span><span className="hidden text-right sm:block">Correct</span><span className="text-right">Tiebreak</span></div>
-      {rows.length === 0 ? <div className="p-8 text-center text-sm text-txt-muted">No submitted brackets yet. Standings appear once entries are submitted and games are scored.</div> : rows.map((r, i) => <div key={r.bracket_id} className="grid grid-cols-[48px_1fr_70px_70px] items-center gap-2 border-b border-white/5 px-4 py-4 last:border-0 sm:grid-cols-[60px_1fr_100px_100px_100px]"><span className="font-display text-lg font-extrabold text-gold-400">{r.rank ?? i + 1}</span><span className="min-w-0"><b className="block truncate text-sm text-white">{r.display_name ?? 'Participant'}</b><small className="text-xs text-txt-muted">{r.entry_name}</small></span><b className="text-right font-display text-xl text-gold-400">{r.total_points}</b><span className="hidden text-right text-sm text-txt-secondary sm:block">{r.correct_picks}</span><span className="text-right text-sm text-txt-secondary">{r.tiebreaker_points ?? '—'}</span></div>)}
+      {rows.length === 0 ? <div className="p-8 text-center text-sm text-txt-muted">No submitted brackets yet. Standings appear once entries are submitted and games are scored.</div> : rows.map((r, i) => <div key={r.bracket_id} className="grid grid-cols-[48px_1fr_70px_70px] items-center gap-2 border-b border-white/5 px-4 py-4 last:border-0 sm:grid-cols-[60px_1fr_100px_100px_100px]"><span className="font-display text-lg font-extrabold text-gold-400">{r.rank ?? i + 1}{rankChanges[r.bracket_id]>0?<small className="ml-1 text-xs text-green-400">↑{rankChanges[r.bracket_id]}</small>:rankChanges[r.bracket_id]<0?<small className="ml-1 text-xs text-red-400">↓{Math.abs(rankChanges[r.bracket_id])}</small>:null}</span><span className="min-w-0"><b className="block truncate text-sm text-white">{r.display_name ?? 'Participant'}</b><small className="text-xs text-txt-muted">{r.entry_name}</small></span><b className="text-right font-display text-xl text-gold-400">{r.total_points}</b><span className="hidden text-right text-sm text-txt-secondary sm:block">{r.correct_picks}</span><span className="text-right text-sm text-txt-secondary">{r.tiebreaker_points ?? '—'}</span></div>)}
     </Card>
     <p className="mt-3 text-xs text-txt-muted">Scoring: Wild Card 1 · Divisional 2 · Conference 4 · Super Bowl 8. Tiebreaker: closest Super Bowl combined score.</p>
   </PageShell>;
@@ -196,6 +206,15 @@ export function AdminPage() {
   if (!pool) return <PageShell title="Pool administration" eyebrow="Restricted"><EmptyState title="No pool attached" body="Join the default pool before opening admin controls." /></PageShell>;
   return <PageShell title="Pool administration" eyebrow="Commissioner console">
     {notice && <p className="mb-5 rounded-lg border border-gold-400/30 bg-gold-400/10 px-4 py-3 text-sm text-gold-300">{notice}</p>}
+    <Card className="mb-5 p-5"><SectionTitle>Commissioner setup checklist</SectionTitle><div className="grid gap-2 sm:grid-cols-2">{[
+      {label:'Private pool created',done:!!pool},
+      {label:'Invite code ready',done:!!code.trim()},
+      {label:'Submission deadline set',done:!!pool.deadline},
+      {label:'14 playoff teams seeded',done:teams.filter(t=>t.conference==='AFC').length===7&&teams.filter(t=>t.conference==='NFC').length===7},
+      {label:'13 playoff games configured',done:games.length>=13},
+      {label:'Participants joined',done:members.length>1},
+    ].map(item=><div key={item.label} className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm"><span className={item.done?'text-green-400':'text-amber-300'}>{item.done?'✓':'○'}</span><span className="text-white">{item.label}</span></div>)}</div><p className="mt-3 text-xs text-txt-muted">Complete the checklist before inviting everyone to submit brackets. Game results and scoring still require verification.</p></Card>
+
     <div className="grid gap-5 lg:grid-cols-2">
       <Card className="p-5"><SectionTitle><span className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-gold-400"/> Pool settings</span></SectionTitle><label className="mb-2 block text-xs text-txt-muted">Bracket submission deadline</label><input type="datetime-local" value={deadline} onChange={e=>setDeadline(e.target.value)} className="mb-3 w-full rounded-lg border border-white/10 bg-navy-950 p-3 text-white"/><GoldButton disabled={busy} onClick={()=>act(()=>supabase.rpc('pp_set_pool_deadline',{p_pool:pool.id,p_deadline:deadline ? new Date(deadline).toISOString() : null}),'Deadline saved')}>Save deadline</GoldButton><div className="my-5 border-t border-white/10"/><label className="mb-2 block text-xs text-txt-muted">Private invitation code</label><div className="flex gap-2"><input value={code} onChange={e=>setCode(e.target.value.toUpperCase())} className="min-w-0 flex-1 rounded-lg border border-white/10 bg-navy-950 p-3 font-bold tracking-widest text-gold-400"/><GoldButton disabled={busy || !code.trim()} onClick={()=>act(()=>supabase.from('pool_invitations').insert({pool_id:pool.id,code:code.trim(),active:true}),'New invitation code created')}>Add code</GoldButton></div><p className="mt-2 text-xs text-txt-muted">Share this code only with invited participants. Existing codes remain active until disabled in the database.</p></Card>
       <Card className="p-5"><SectionTitle><span className="flex items-center gap-2"><Megaphone className="h-5 w-5 text-gold-400"/> Announcement</span></SectionTitle><input value={announcementTitle} onChange={e=>setAnnouncementTitle(e.target.value)} placeholder="Announcement title" className="mb-3 w-full rounded-lg border border-white/10 bg-navy-950 p-3 text-white"/><textarea value={announcementBody} onChange={e=>setAnnouncementBody(e.target.value)} placeholder="Message to pool participants" rows={4} className="mb-3 w-full rounded-lg border border-white/10 bg-navy-950 p-3 text-white"/><GoldButton disabled={busy || !announcementTitle.trim() || !announcementBody.trim()} onClick={()=>act(()=>supabase.from('announcements').insert({pool_id:pool.id,title:announcementTitle.trim(),body:announcementBody.trim()}),'Announcement posted')}>Post announcement</GoldButton></Card>
