@@ -37,6 +37,9 @@ export function SchedulePage() {
   const { pool } = useAuth();
   const [games, setGames] = useState<PlayoffGame[]>([]);
   const [teams, setTeams] = useState<PlayoffTeam[]>([]);
+  const [feed, setFeed] = useState<any[]>([]);
+  const [feedError, setFeedError] = useState('');
+  const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
   const [busy, setBusy] = useState(true);
   useEffect(() => {
     let live = true;
@@ -47,22 +50,53 @@ export function SchedulePage() {
     ]).then(([g,t]) => { if (live) { setGames(g.data ?? []); setTeams(t.data ?? []); setBusy(false); } });
     return () => { live = false; };
   }, [pool]);
+  useEffect(() => {
+    if (!pool) return;
+    let live = true;
+    const load = async () => {
+      try {
+        const response = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=3&season=${pool.season}`);
+        if (!response.ok) throw new Error('Live score provider unavailable');
+        const data = await response.json();
+        if (live) { setFeed(data.events ?? []); setFeedError(''); setUpdatedAt(new Date()); }
+      } catch (e) {
+        if (live) setFeedError('Live scores are temporarily unavailable. Pool schedule and saved results remain available below.');
+      }
+    };
+    load();
+    const timer = window.setInterval(load, 30000);
+    return () => { live = false; window.clearInterval(timer); };
+  }, [pool]);
   const byId = useMemo(() => new Map(teams.map(t => [t.id,t])), [teams]);
   if (!pool) return <PageShell title="NFL Playoff Schedule" eyebrow="Game center"><EmptyState title="Private pool access" body="Sign in and join your pool to see its playoff schedule." /></PageShell>;
   if (busy) return <Spinner label="Loading playoff schedule…" />;
-  const rounds: PlayoffGame['round'][] = ['wild_card','divisional','conference','super_bowl'];
-  const labels = { wild_card:'Wild Card', divisional:'Divisional Round', conference:'Conference Championships', super_bowl:'Super Bowl' };
   return <PageShell title="NFL Playoff Schedule" eyebrow={`Game center · ${pool.season}`}>
-    {games.length === 0 ? <EmptyState title="Schedule not loaded yet" body="The playoff schedule will appear after the NFL confirms the postseason field and matchups. No placeholder scores are shown." /> : <div className="space-y-8">{rounds.map(round => {
+    <Card className="mb-6 p-5">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><h2 className="font-display text-lg font-bold uppercase text-white">Live NFL playoff scores</h2><span className="inline-flex items-center gap-2 text-xs text-txt-muted"><span className="h-2 w-2 rounded-full bg-correct"/> ESPN feed · refreshes every 30 seconds</span></div>
+      {updatedAt && <p className="mb-3 text-[11px] text-txt-muted">Last updated {updatedAt.toLocaleTimeString()}</p>}
+      {feedError && <p className="mb-3 text-sm text-livered">{feedError}</p>}
+      {feed.length === 0 ? <p className="py-5 text-center text-sm text-txt-muted">ESPN has no postseason games available for this season yet. The playoff scoreboard will populate when postseason matchups are published.</p> : <div className="grid gap-3 md:grid-cols-2">{feed.map(event => {
+        const competition = event.competitions?.[0];
+        const competitors = competition?.competitors ?? [];
+        const away = competitors.find((x:any)=>x.homeAway==='away') ?? competitors[0];
+        const home = competitors.find((x:any)=>x.homeAway==='home') ?? competitors[1];
+        const state = competition?.status?.type?.state ?? event.status?.type?.state;
+        const detail = competition?.status?.type?.shortDetail ?? event.status?.type?.shortDetail ?? '';
+        return <div key={event.id} className="rounded-xl border border-white/10 bg-navy-950/70 p-4"><div className="mb-3 flex items-center justify-between"><span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${state==='in'?'bg-livered/15 text-livered':state==='post'?'bg-white/10 text-txt-muted':'bg-gold-400/10 text-gold-400'}`}>{competition?.status?.type?.description ?? event.status?.type?.description ?? 'Scheduled'}</span><span className="text-xs text-txt-muted">{detail || new Date(event.date).toLocaleString()}</span></div><div className="grid grid-cols-[1fr_auto] gap-3"><div className="space-y-3">{[away,home].map((team:any,i)=><div key={team?.id ?? i} className="flex items-center gap-2"><img src={team?.team?.logo} alt="" className="h-7 w-7 object-contain"/><span className="text-sm font-semibold text-white">{team?.team?.displayName ?? 'TBD'}</span></div>)}</div><div className="text-right font-display text-2xl font-extrabold text-gold-400"><p>{away?.score ?? '—'}</p><p>{home?.score ?? '—'}</p></div></div></div>;
+      })}</div>}
+    </Card>
+    <h2 className="mb-4 font-display text-xl font-bold uppercase tracking-wide text-white">Pool schedule & official results</h2>
+    {games.length === 0 ? <EmptyState title="Pool bracket schedule not loaded" body="The commissioner can enter teams, matchups, and kickoff times in Admin. Live ESPN scores appear above as soon as postseason games are available." /> : <div className="space-y-8">{(['wild_card','divisional','conference','super_bowl'] as PlayoffGame['round'][]).map(round => {
       const list = games.filter(g => g.round === round);
       if (!list.length) return null;
+      const labels = { wild_card:'Wild Card', divisional:'Divisional Round', conference:'Conference Championships', super_bowl:'Super Bowl' };
       return <section key={round}><SectionTitle>{labels[round]}</SectionTitle><div className="grid gap-3 md:grid-cols-2">{list.map(g => {
         const home = g.home_team_id ? byId.get(g.home_team_id) : undefined;
         const away = g.away_team_id ? byId.get(g.away_team_id) : undefined;
-        return <Card key={g.id} className="p-4"><div className="mb-3 flex items-center justify-between"><StatusPill status={g.status} /><span className="text-xs text-txt-muted">{g.kickoff ? new Date(g.kickoff).toLocaleString() : 'Kickoff TBD'}</span></div><div className="grid grid-cols-[1fr_auto] gap-3"><div className="space-y-3"><p className="font-semibold text-white">{away ? `#${away.seed} ${away.name}` : 'Away team TBD'}</p><p className="font-semibold text-white">{home ? `#${home.seed} ${home.name}` : 'Home team TBD'}</p></div><div className="text-right font-display text-2xl font-extrabold text-gold-400"><p>{g.away_score ?? '—'}</p><p>{g.home_score ?? '—'}</p></div></div>{g.status === 'live' || g.status === 'halftime' ? <p className="mt-3 text-xs font-semibold text-livered">{g.status === 'halftime' ? 'HALFTIME' : 'LIVE'} {g.quarter ?? ''} {g.clock ?? ''}</p> : null}</Card>;
+        return <Card key={g.id} className="p-4"><div className="mb-3 flex items-center justify-between"><StatusPill status={g.status} /><span className="text-xs text-txt-muted">{g.kickoff ? new Date(g.kickoff).toLocaleString() : 'Kickoff TBD'}</span></div><div className="grid grid-cols-[1fr_auto] gap-3"><div className="space-y-3"><p className="font-semibold text-white">{away ? `#${away.seed} ${away.name}` : 'Away team TBD'}</p><p className="font-semibold text-white">{home ? `#${home.seed} ${home.name}` : 'Home team TBD'}</p></div><div className="text-right font-display text-2xl font-extrabold text-gold-400"><p>{g.away_score ?? '—'}</p><p>{g.home_score ?? '—'}</p></div></div></Card>;
       })}</div></section>;
     })}</div>}
-    <p className="mt-5 text-xs text-txt-muted">Scores shown here are official results entered into the pool game center. Live score-feed automation still needs a connected data provider; no scores are invented.</p>
+    <p className="mt-5 text-xs text-txt-muted">The ESPN scoreboard is a third-party, undocumented public feed and may change without notice. Final pool scoring is calculated from the commissioner-confirmed game results.</p>
   </PageShell>;
 }
 
