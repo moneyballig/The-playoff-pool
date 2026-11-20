@@ -54,7 +54,7 @@ function EntriesPage({ onOpenBracket, onJoin }: { onOpenBracket: (id: string) =>
         const pointsByRound:Record<string,number>={wild_card:1,divisional:2,conference:4,super_bowl:8};
         const {data:allGames}=await supabase.from('playoff_games').select('round,status').eq('season',pool.season);
         if(!active)return;
-        setRemainingPoints((allGames??[]).filter(g=>g.status!=='final').reduce((sum,g)=>sum+(pointsByRound[g.round]??0),0));
+        setRemainingPoints(allGames?.length ? allGames.filter(g=>g.status!=='final').reduce((sum,g)=>sum+(pointsByRound[g.round]??0),0) : 30);
       }
       setLoading(false);
     }
