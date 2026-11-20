@@ -1,52 +1,135 @@
-import { useState } from 'react';
-import { AuthProvider } from '@/lib/auth';
+import { useEffect, useState } from 'react';
+import { Trophy, CalendarDays, ListOrdered, FileText, ShieldCheck, Plus, ChevronRight } from 'lucide-react';
+import { AuthProvider, useAuth } from '@/lib/auth';
+import { supabase, supabaseConfigured } from '@/lib/supabase';
+import type { Bracket } from '@/lib/types';
 import Nav, { type PageId } from '@/components/Nav';
 import Home from '@/pages/Home';
 import BracketPage from '@/pages/BracketPage';
 import AuthModal, { JoinPoolModal } from '@/components/Modals';
-import { Trophy, CalendarDays, ListOrdered, FileText, ShieldCheck } from 'lucide-react';
+import { Card, GoldButton, GhostButton, EmptyState, Spinner } from '@/components/ui';
 
-function PlaceholderPage({ page }: { page: PageId }) {
-  const content: Record<string, { title: string; body: string; icon: typeof Trophy }> = {
-    entries: { title: 'My Entries', body: 'Your two bracket entries will appear here after you sign in and join the private pool.', icon: FileText },
-    leaderboard: { title: 'Leaderboard', body: 'Standings and points will appear here once pool entries and game results are available.', icon: ListOrdered },
-    schedule: { title: 'NFL Playoff Schedule', body: 'The postseason schedule and game status will appear here when the pool administrator loads the season schedule.', icon: CalendarDays },
-    admin: { title: 'Pool Administration', body: 'Pool management tools are available to the designated administrator after backend setup.', icon: ShieldCheck },
-    join: { title: 'Join the Pool', body: 'Sign in and enter your private invitation code to participate.', icon: Trophy },
+function EntriesPage({ onOpenBracket, onJoin }: { onOpenBracket: (id: string) => void; onJoin: () => void }) {
+  const { user, pool } = useAuth();
+  const [brackets, setBrackets] = useState<Bracket[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      if (!supabaseConfigured || !user || !pool) {
+        setBrackets([]);
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      const { data, error: queryError } = await supabase
+        .from('brackets')
+        .select('*')
+        .eq('pool_id', pool.id)
+        .eq('user_id', user.id)
+        .order('entry_number');
+      if (!active) return;
+      if (queryError) setError(queryError.message);
+      setBrackets((data as Bracket[]) ?? []);
+      setLoading(false);
+    }
+    load();
+    return () => { active = false; };
+  }, [user, pool]);
+
+  const createBracket = async () => {
+    if (!user || !pool || brackets.length >= 2 || creating) return;
+    setCreating(true);
+    setError('');
+    const nextNumber = brackets.length === 0 ? 1 : 2;
+    const { data, error: insertError } = await supabase
+      .from('brackets')
+      .insert({ pool_id: pool.id, user_id: user.id, entry_number: nextNumber, name: `Bracket ${nextNumber}` })
+      .select('*')
+      .single();
+    if (insertError) setError(insertError.message);
+    else if (data) {
+      const created = data as Bracket;
+      setBrackets((current) => [...current, created]);
+      onOpenBracket(created.id);
+    }
+    setCreating(false);
   };
-  const item = content[page] ?? content.entries;
-  const Icon = item.icon;
+
+  if (!supabaseConfigured) {
+    return <main className="mx-auto max-w-4xl px-4 py-12"><EmptyState title="Pool setup still needed" body="The website interface is connected, but secure accounts, invitations, and saved brackets need the Supabase backend credentials. This is a one-time owner setup." /></main>;
+  }
+  if (!user) {
+    return <main className="mx-auto max-w-4xl px-4 py-12"><EmptyState title="Sign in to view your entries" body="Create an account or sign in, then join the private pool with your invitation code." action={<GoldButton onClick={onJoin}>Sign in / Join</GoldButton>} /></main>;
+  }
+  if (!pool) {
+    return <main className="mx-auto max-w-4xl px-4 py-12"><EmptyState title="Join the private pool" body="Enter the invitation code from your pool organizer to create your playoff entries." action={<GoldButton onClick={onJoin}>Enter invitation code</GoldButton>} /></main>;
+  }
+  if (loading) return <Spinner label="Loading your entries…" />;
+
   return (
-    <main className="mx-auto max-w-4xl px-4 py-20">
-      <section className="rounded-2xl border border-white/10 bg-card-sheen px-6 py-14 text-center shadow-card">
-        <Icon className="mx-auto mb-4 h-10 w-10 text-gold-400" />
-        <h1 className="font-display text-3xl font-extrabold uppercase tracking-wide text-white">{item.title}</h1>
-        <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-txt-secondary">{item.body}</p>
-      </section>
+    <main className="mx-auto max-w-5xl px-4 py-10">
+      <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
+        <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-gold-400">Your competition</p><h1 className="mt-1 font-display text-3xl font-extrabold uppercase text-white">My Entries</h1><p className="mt-1 text-sm text-txt-secondary">Create up to two independent playoff brackets.</p></div>
+        <GoldButton onClick={createBracket} disabled={brackets.length >= 2 || creating}><Plus className="h-4 w-4" />{creating ? 'Creating…' : brackets.length >= 2 ? '2 of 2 created' : 'Create bracket'}</GoldButton>
+      </div>
+      {error && <p className="mb-4 rounded-lg border border-livered/30 bg-livered/10 px-4 py-3 text-sm text-livered">{error}</p>}
+      {brackets.length === 0 ? <EmptyState title="No brackets yet" body="Create your first bracket to start making your 13 playoff picks." action={<GoldButton onClick={createBracket} disabled={creating}><Plus className="h-4 w-4" />Create first bracket</GoldButton>} /> : (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {brackets.map((bracket) => (
+            <Card key={bracket.id} className="p-5">
+              <div className="flex items-center justify-between"><span className="rounded-lg bg-gold-400/10 p-2 text-gold-400"><Trophy className="h-5 w-5" /></span><span className="text-xs font-semibold uppercase tracking-wider text-txt-muted">{bracket.submitted ? 'Submitted' : bracket.frozen ? 'Locked' : 'Draft'}</span></div>
+              <h2 className="mt-4 font-display text-xl font-bold uppercase text-white">{bracket.name}</h2>
+              <p className="mt-1 text-sm text-txt-secondary">{bracket.total_points} points · {bracket.correct_picks} correct picks</p>
+              <div className="mt-5"><GoldButton className="w-full" onClick={() => onOpenBracket(bracket.id)}><FileText className="h-4 w-4" />{bracket.submitted ? 'View bracket' : 'Open bracket'}<ChevronRight className="h-4 w-4" /></GoldButton></div>
+            </Card>
+          ))}
+        </div>
+      )}
     </main>
   );
 }
 
+function InfoPage({ page }: { page: PageId }) {
+  const content: Record<string, { title: string; body: string; icon: typeof Trophy }> = {
+    leaderboard: { title: 'Leaderboard', body: 'Standings, correct picks, and round-by-round points will appear here as the pool is populated with entries and official game results.', icon: ListOrdered },
+    schedule: { title: 'NFL Playoff Schedule', body: 'The postseason schedule, kickoff times, live scores, quarter, and game clock will appear here once the season schedule is loaded. Scores will never be fabricated.', icon: CalendarDays },
+    admin: { title: 'Pool Administration', body: 'Pool management tools are available to the designated administrator after the backend is connected.', icon: ShieldCheck },
+    join: { title: 'Join the Pool', body: 'Sign in and enter your private invitation code to participate.', icon: Trophy },
+  };
+  const item = content[page] ?? content.leaderboard;
+  const Icon = item.icon;
+  return <main className="mx-auto max-w-4xl px-4 py-20"><section className="rounded-2xl border border-white/10 bg-card-sheen px-6 py-14 text-center shadow-card"><Icon className="mx-auto mb-4 h-10 w-10 text-gold-400" /><h1 className="font-display text-3xl font-extrabold uppercase tracking-wide text-white">{item.title}</h1><p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-txt-secondary">{item.body}</p></section></main>;
+}
+
 function AppContent() {
+  const { user } = useAuth();
   const [page, setPage] = useState<PageId>('home');
+  const [bracketId, setBracketId] = useState<string | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
   const openJoin = () => {
-    setAuthOpen(false);
-    setJoinOpen(true);
+    if (!user) setAuthOpen(true);
+    else setJoinOpen(true);
+  };
+  const openBracket = (id: string) => {
+    setBracketId(id);
+    setPage('bracket');
   };
 
   return (
     <div className="min-h-screen bg-navy-950 text-txt-primary">
       <Nav page={page} setPage={setPage} onAuthClick={() => setAuthOpen(true)} />
       {page === 'home' && <Home setPage={setPage} onJoinClick={openJoin} />}
-      {page === 'bracket' && <BracketPage bracketId={null} onOpenEntries={() => setPage('entries')} />}
-      {page !== 'home' && page !== 'bracket' && <PlaceholderPage page={page} />}
+      {page === 'entries' && <EntriesPage onOpenBracket={openBracket} onJoin={openJoin} />}
+      {page === 'bracket' && (bracketId ? <BracketPage bracketId={bracketId} onOpenEntries={() => setPage('entries')} /> : <EntriesPage onOpenBracket={openBracket} onJoin={openJoin} />)}
+      {page !== 'home' && page !== 'entries' && page !== 'bracket' && <InfoPage page={page} />}
       {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
       {joinOpen && <JoinPoolModal onClose={() => setJoinOpen(false)} />}
-      <footer className="border-t border-white/10 px-4 py-6 text-center text-xs text-txt-muted">
-        THE PLAYOFF POOL · Private NFL postseason competition
-      </footer>
+      <footer className="border-t border-white/10 px-4 py-6 text-center text-xs text-txt-muted">THE PLAYOFF POOL · Private NFL postseason competition</footer>
     </div>
   );
 }
