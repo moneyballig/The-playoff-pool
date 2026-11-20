@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { RefreshCw, Radio, CalendarDays } from 'lucide-react';
+import { RefreshCw, Radio } from 'lucide-react';
 
 type ScoreTeam = { abbreviation: string; name: string; logo?: string; score?: string; homeAway: string };
 type ScoreGame = { id: string; date: string; status: string; state: string; detail: string; teams: ScoreTeam[] };
@@ -63,17 +63,19 @@ export default function NFLScoreboard() {
    </div>
    {loading?<p className="px-5 py-6 text-sm text-slate-300">Loading NFL games…</p>:error&&games.length===0?<p className="px-5 py-6 text-sm text-slate-300">Scores are temporarily unavailable. Try refreshing.</p>:games.length===0?<p className="px-5 py-6 text-sm text-slate-300">No NFL games are currently listed.</p>:
    <div ref={trackRef} onMouseEnter={()=>{pausedRef.current=true}} onMouseLeave={()=>{pausedRef.current=false}} onTouchStart={()=>{pausedRef.current=true}} onTouchEnd={()=>{pausedRef.current=false}} className="flex gap-2 overflow-x-auto px-3 py-3 sm:px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-    {games.map(g=><article key={g.id} className="w-[118px] shrink-0 rounded-lg border border-white/15 bg-gradient-to-br from-[#203657] to-[#0b172b] p-2 sm:w-[125px]">
-     <div className="mb-2 flex flex-col gap-0.5 text-[9px]">
-      <span className={g.state==='in'?'font-bold text-red-400':'text-amber-200'}>{g.state==='in'?'● LIVE':g.state==='post'?'FINAL':'UPCOMING'}</span>
-      <span className="truncate text-slate-300">{g.state==='pre'?new Date(g.date).toLocaleDateString([],{weekday:'short',month:'short',day:'numeric'}):g.detail}</span>
+    {games.map(g=><article key={g.id} className="w-[104px] shrink-0 rounded-lg border border-white/15 bg-gradient-to-br from-[#203657] to-[#0b172b] px-1.5 py-2 sm:w-[112px]">
+     <div className="mb-1.5 flex items-center justify-between gap-1 text-[8px]">
+      <span className={g.state==='in'?'font-bold text-red-400':'text-amber-200'}>{g.state==='in'?'● LIVE':g.state==='post'?'FINAL':'NEXT'}</span>
+      <span className="truncate text-slate-300">{g.state==='pre'?new Date(g.date).toLocaleDateString([],{month:'numeric',day:'numeric'}):g.detail}</span>
      </div>
-     <div className="space-y-1">{g.teams.map(t=><div key={t.homeAway} className="flex items-center gap-2">
-      {t.logo?<img src={t.logo} alt="" className="h-5 w-5 shrink-0 object-contain"/>:<span className="h-5 w-5 shrink-0"/>}
-      <span className="min-w-0 flex-1 truncate text-[11px] font-semibold text-white">{t.abbreviation}</span>
-      <strong className="text-sm tabular-nums text-white">{g.state==='pre'?'–':t.score??'–'}</strong>
-     </div>)}</div>
-     <div className="mt-2 flex items-center gap-1 border-t border-white/10 pt-1.5 text-[9px] text-slate-300"><CalendarDays className="h-3 w-3"/>{g.state==='pre'?new Date(g.date).toLocaleTimeString([],{hour:'numeric',minute:'2-digit',timeZone:'America/New_York'})+' ET':g.status}</div>
+     <div className="flex items-center justify-between gap-1">
+      {g.teams.map((t,i)=><div key={t.homeAway} className="flex min-w-0 flex-1 flex-col items-center gap-0.5">
+       {t.logo?<img src={t.logo} alt="" className="h-5 w-5 object-contain"/>:<span className="h-5 w-5"/>}
+       <span className="truncate text-[10px] font-bold text-white">{t.abbreviation}</span>
+       <strong className="text-xs tabular-nums text-white">{g.state==='pre'?'–':t.score??'–'}</strong>
+      </div>)}
+     </div>
+     <div className="mt-1.5 truncate border-t border-white/10 pt-1 text-center text-[9px] text-slate-300">{g.state==='pre'?new Date(g.date).toLocaleTimeString([],{hour:'numeric',minute:'2-digit',timeZone:'America/New_York'})+' ET':g.status}</div>
     </article>)}
    </div>}
    <p className="px-4 pb-3 text-[10px] text-slate-500 sm:px-6">NFL game data via ESPN. Scores refresh every minute. Games move automatically; hover or touch to pause.</p>
