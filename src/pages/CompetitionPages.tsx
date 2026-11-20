@@ -100,7 +100,7 @@ export function AdminPage() {
     if (pool.deadline) setDeadline(new Date(pool.deadline).toISOString().slice(0,16));
   };
   useEffect(() => { load(); }, [pool, allowed]);
-  const act = async (fn: () => Promise<any>, success: string) => {
+  const act = async (fn: () => PromiseLike<any>, success: string) => {
     setBusy(true); setNotice('');
     const r = await fn(); setBusy(false);
     if (r?.error) setNotice(r.error.message); else { setNotice(success); await load(); await refresh(); }
