@@ -41,6 +41,15 @@ function EntriesPage({ onOpenBracket, onJoin }: { onOpenBracket: (id: string) =>
     return () => { active = false; };
   }, [user, pool]);
 
+  const renameBracket = async (bracket: Bracket) => {
+    if (bracket.frozen || bracket.submitted) return;
+    const name = window.prompt('Name your bracket', bracket.name)?.trim();
+    if (!name || name === bracket.name || name.length > 50) return;
+    const { error: renameError } = await supabase.from('brackets').update({name}).eq('id',bracket.id).eq('user_id',user!.id);
+    if (renameError) setError(renameError.message);
+    else setBrackets(current=>current.map(b=>b.id===bracket.id?{...b,name}:b));
+  };
+
   const createBracket = async () => {
     if (!user || !pool || brackets.length >= 2 || creating) return;
     setCreating(true);
@@ -84,7 +93,8 @@ function EntriesPage({ onOpenBracket, onJoin }: { onOpenBracket: (id: string) =>
             <Card key={bracket.id} className="p-5">
               <div className="flex items-center justify-between"><span className="rounded-lg bg-gold-400/10 p-2 text-gold-400"><Trophy className="h-5 w-5" /></span><span className="text-xs font-semibold uppercase tracking-wider text-txt-muted">{bracket.submitted ? 'Submitted' : bracket.frozen ? 'Locked' : 'Draft'}</span></div>
               <h2 className="mt-4 font-display text-xl font-bold uppercase text-white">{bracket.name}</h2>
-              <p className="mt-1 text-sm text-txt-secondary">{bracket.total_points} points · {bracket.correct_picks} correct picks</p>
+              {!bracket.frozen && !bracket.submitted && <button type="button" onClick={()=>void renameBracket(bracket)} className="mt-1 text-xs text-gold-400 underline underline-offset-2 hover:text-gold-300">Rename bracket</button>}
+              <p className="mt-1 text-sm text-txt-secondary">{bracket.total_points} points · {bracket.correct_picks} correct picks {bracket.rank?` · Rank #${bracket.rank}`:''}</p>
               <div className="mt-5"><GoldButton className="w-full" onClick={() => onOpenBracket(bracket.id)}><FileText className="h-4 w-4" />{bracket.submitted ? 'View bracket' : 'Open bracket'}<ChevronRight className="h-4 w-4" /></GoldButton></div>
             </Card>
           ))}
