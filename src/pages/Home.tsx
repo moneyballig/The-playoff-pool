@@ -185,6 +185,7 @@ export default function Home({ setPage, onJoinClick }: Props) {
           </div>
         </div>
       </section>
+      {pool && games.some(g=>g.round==='super_bowl'&&g.status==='final') && leaders.length>0 && <section className="mx-auto max-w-[1500px] px-4 pt-5 sm:px-7"><div className="rounded-xl border border-amber-400/50 bg-gradient-to-r from-[#1b243a] via-[#483a19] to-[#1b243a] p-6 text-center shadow-xl"><Trophy className="mx-auto mb-2 h-12 w-12 text-amber-300"/><p className="text-xs font-bold uppercase tracking-[.3em] text-amber-200">Pool champion</p><h2 className="mt-2 font-display text-3xl font-extrabold uppercase text-white">{leaders[0].display_name??'Champion'}</h2><p className="mt-1 text-sm text-amber-100">{leaders[0].entry_name} · {leaders[0].total_points} points</p><p className="mt-2 text-xs text-slate-300">Final standings are based on commissioner-confirmed results.</p></div></section>}
       <div className="mx-auto max-w-[1500px] px-4 py-5 sm:px-7">
         <div className="home-dashboard-grid grid gap-5 lg:grid-cols-12 lg:items-stretch">
         {!user && (
