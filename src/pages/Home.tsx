@@ -286,6 +286,7 @@ export default function Home({ setPage, onJoinClick }: Props) {
             />
           </section>
         )}
+        </div>
       </div>
     </div>
   );
