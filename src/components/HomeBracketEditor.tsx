@@ -63,10 +63,10 @@ export default function HomeBracketEditor({teams,games,brackets,onJoinClick,onEn
  };
  return <section id="home-bracket" className="mx-auto max-w-[1500px] px-4 pt-5 sm:px-7">
   <div className="gridiron-panel overflow-hidden rounded-xl border border-amber-300/30">
-   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-amber-300/25 bg-[#08172d] px-4 py-4 sm:px-8">
-    <span className="font-display text-xl font-extrabold uppercase italic text-amber-300">AFC</span>
-    <h2 className="font-display text-lg font-extrabold uppercase italic tracking-wider text-white sm:text-3xl">NFL Playoff Bracket</h2>
-    <span className="font-display text-xl font-extrabold uppercase italic text-sky-300">NFC</span>
+   <div className="flex items-center justify-center border-b border-amber-300/25 bg-[#08172d] px-2 py-2.5 lg:justify-between lg:gap-3 lg:px-8 lg:py-4">
+    <span className="hidden font-display text-xl font-extrabold uppercase italic text-amber-300 lg:block">AFC</span>
+    <h2 className="text-center font-display text-base font-extrabold uppercase italic tracking-wider text-white sm:text-lg lg:text-3xl">NFL Playoff Bracket</h2>
+    <span className="hidden font-display text-xl font-extrabold uppercase italic text-sky-300 lg:block">NFC</span>
    </div>
    <div className="border-b border-white/10 bg-[#08172d]/80 px-4 py-4 sm:px-8">
     {!user?<GoldButton onClick={onJoinClick}>Sign in to make your picks</GoldButton>:!pool?<GoldButton onClick={onJoinClick}>Join a pool to make picks</GoldButton>:brackets.length===0?<GoldButton onClick={onEntries}>Create your first bracket</GoldButton>:<div className="flex flex-wrap items-center gap-3">
