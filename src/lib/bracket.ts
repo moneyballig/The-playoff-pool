@@ -102,7 +102,7 @@ export function buildBracket(teams: PlayoffTeam[], games: PlayoffGame[], picks: 
 
     // slot 1: #1 seed vs lowest remaining seed
     const byeGameWinnerIsReal = gameWithBye && gameWithBye.status === 'final' && gameWithBye.winner_team_id;
-    const lowest = remaining[0] ?? null;
+    const lowest = remaining.length === 3 ? remaining[remaining.length - 1] : null;
     const home1 = seed1;
     const away1 = lowest;
     let winner1: PlayoffTeam | null = null;
@@ -129,7 +129,7 @@ export function buildBracket(teams: PlayoffTeam[], games: PlayoffGame[], picks: 
     });
 
     // slot 2: other two winners, higher seed hosts
-    const rest = remaining.slice(1);
+    const rest = remaining.length === 3 ? remaining.slice(0, -1) : [];
     let home2: PlayoffTeam | null = null;
     let away2: PlayoffTeam | null = null;
     if (rest.length >= 2) {
@@ -248,6 +248,6 @@ export function allMatchups(b: DerivedBracket): Matchup[] {
 /** Extract valid picks (team must be in the current pairing) as save payload. */
 export function validPicks(b: DerivedBracket): { pick_key: string; team_id: string }[] {
   return allMatchups(b)
-    .filter((m) => m.winner && (m.winner.id === m.home?.id || m.winner.id === m.away?.id))
-    .map((m) => ({ pick_key: m.key, team_id: m.winner!.id }));
+    .filter((m) => m.userPick && (m.userPick.id === m.home?.id || m.userPick.id === m.away?.id))
+    .map((m) => ({ pick_key: m.key, team_id: m.userPick!.id }));
 }
