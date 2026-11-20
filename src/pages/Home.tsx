@@ -239,8 +239,8 @@ export default function Home({ setPage, onJoinClick }: Props) {
             </SectionTitle>
             <div className="grid gap-4 md:grid-cols-3">
               {upcoming.map((g) => {
-                const home = g.home_team_id ? teamById.get(g.home_team_id) : null;
-                const away = g.away_team_id ? teamById.get(g.away_team_id) : null;
+                const home = g.home_team_id ? teamById.get(g.home_team_id) ?? null : null;
+                const away = g.away_team_id ? teamById.get(g.away_team_id) ?? null : null;
                 const ko = fmtKickoff(g.kickoff);
                 return (
                   <Card key={g.id} className="p-4 transition hover:border-gold-400/30">
