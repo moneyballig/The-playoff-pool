@@ -3,44 +3,12 @@ import type { ReactNode } from 'react';
 import { CalendarDays, ListOrdered, ShieldCheck, Plus, RefreshCw, Trash2, Save, Users, Trophy, Megaphone } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
-import type { Announcement, LeaderboardRow, PlayoffGame, PlayoffTeam } from '@/lib/types';
+import type { Announcement, PlayoffGame, PlayoffTeam } from '@/lib/types';
 import { Card, GoldButton, GhostButton, EmptyState, Spinner, SectionTitle, StatusPill } from '@/components/ui';
+export { default as LeaderboardPage } from '@/components/AdvancedLeaderboard';
 
 function PageShell({ title, eyebrow, children }: { title: string; eyebrow: string; children: ReactNode }) {
   return <main className="mx-auto max-w-6xl px-4 py-10"><p className="text-xs font-bold uppercase tracking-[.2em] text-gold-400">{eyebrow}</p><h1 className="mb-7 mt-1 font-display text-3xl font-extrabold uppercase text-white">{title}</h1>{children}</main>;
-}
-
-export function LeaderboardPage() {
-  const { pool } = useAuth();
-  const [rows, setRows] = useState<LeaderboardRow[]>([]);
-  const [busy, setBusy] = useState(true);
-  const [lastUpdated, setLastUpdated] = useState<Date|null>(null);
-  const [rankChanges, setRankChanges] = useState<Record<string,number>>({});
-  useEffect(() => {
-    if (!pool) { setBusy(false); return; }
-    let live = true;
-    let previous: LeaderboardRow[] | null = null;
-    const load = async () => {
-      const {data,error}=await supabase.rpc('pp_leaderboard',{p_pool:pool.id});
-      if(!live)return;
-      if(!error){const next=(data as LeaderboardRow[])??[];
-       if(previous){const old=new Map(previous.map((r,i)=>[r.bracket_id,r.rank??i+1]));const changes:Record<string,number>={};next.forEach((r,i)=>{const before=old.get(r.bracket_id);if(before!==undefined)changes[r.bracket_id]=before-(r.rank??i+1)});setRankChanges(changes)}
-       previous=next;setRows(next);setLastUpdated(new Date());}
-      setBusy(false);
-    };
-    void load();const timer=window.setInterval(()=>void load(),60000);
-    return ()=>{live=false;window.clearInterval(timer)};
-  }, [pool]);
-  if (!pool) return <PageShell title="Leaderboard" eyebrow="Standings"><EmptyState title="Private pool access" body="Sign in and join your private pool to see standings." /></PageShell>;
-  if (busy) return <Spinner label="Loading standings…" />;
-  return <PageShell title="Leaderboard" eyebrow={`NFL Playoffs · ${pool.season}`}>
-    <p className="mb-3 text-xs text-txt-muted">Standings refresh every minute{lastUpdated?' · Updated '+lastUpdated.toLocaleTimeString():''}. Movement compares with the previous refresh.</p>
-    <Card className="overflow-hidden p-0">
-      <div className="grid grid-cols-[48px_1fr_70px_70px] gap-2 border-b border-white/10 bg-white/5 px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-txt-muted sm:grid-cols-[60px_1fr_100px_100px_100px]"><span>Rank</span><span>Entry</span><span className="text-right">Points</span><span className="hidden text-right sm:block">Correct</span><span className="text-right">Tiebreak</span></div>
-      {rows.length === 0 ? <div className="p-8 text-center text-sm text-txt-muted">No submitted brackets yet. Standings appear once entries are submitted and games are scored.</div> : rows.map((r, i) => <div key={r.bracket_id} className="grid grid-cols-[48px_1fr_70px_70px] items-center gap-2 border-b border-white/5 px-4 py-4 last:border-0 sm:grid-cols-[60px_1fr_100px_100px_100px]"><span className="font-display text-lg font-extrabold text-gold-400">{r.rank ?? i + 1}{rankChanges[r.bracket_id]>0?<small className="ml-1 text-xs text-green-400">↑{rankChanges[r.bracket_id]}</small>:rankChanges[r.bracket_id]<0?<small className="ml-1 text-xs text-red-400">↓{Math.abs(rankChanges[r.bracket_id])}</small>:null}</span><span className="min-w-0"><b className="block truncate text-sm text-white">{r.display_name ?? 'Participant'}</b><small className="text-xs text-txt-muted">{r.entry_name}</small></span><b className="text-right font-display text-xl text-gold-400">{r.total_points}</b><span className="hidden text-right text-sm text-txt-secondary sm:block">{r.correct_picks}</span><span className="text-right text-sm text-txt-secondary">{r.tiebreaker_points ?? '—'}</span></div>)}
-    </Card>
-    <p className="mt-3 text-xs text-txt-muted">Scoring: Wild Card 1 · Divisional 2 · Conference 4 · Super Bowl 8. Tiebreaker: closest Super Bowl combined score.</p>
-  </PageShell>;
 }
 
 export function SchedulePage() {
