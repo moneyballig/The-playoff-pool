@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import { CalendarDays, ListOrdered, ShieldCheck, Plus, RefreshCw, Trash2, Save, Users, Trophy, Megaphone } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import type { Announcement, LeaderboardRow, PlayoffGame, PlayoffTeam } from '@/lib/types';
 import { Card, GoldButton, GhostButton, EmptyState, Spinner, SectionTitle, StatusPill } from '@/components/ui';
 
-function PageShell({ title, eyebrow, children }: { title: string; eyebrow: string; children: React.ReactNode }) {
+function PageShell({ title, eyebrow, children }: { title: string; eyebrow: string; children: ReactNode }) {
   return <main className="mx-auto max-w-6xl px-4 py-10"><p className="text-xs font-bold uppercase tracking-[.2em] text-gold-400">{eyebrow}</p><h1 className="mb-7 mt-1 font-display text-3xl font-extrabold uppercase text-white">{title}</h1>{children}</main>;
 }
 
