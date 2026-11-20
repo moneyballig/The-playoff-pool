@@ -25,9 +25,9 @@ function MobileWildCard({conference,teams}:{conference:'AFC'|'NFC';teams:Playoff
   <div className="gridiron-match flex min-h-24 flex-col items-center justify-center gap-1 rounded-lg border border-amber-400/30 p-2"><span className="text-[10px] font-bold uppercase text-amber-200">#1 Seed Bye</span><TeamLogo team={bySeed(1)} size={28}/><span className="max-w-full truncate text-[11px] font-semibold text-white">{bySeed(1)?.name??'TBD'}</span></div>
  </div>;
 }
-function BracketRound({conference,round,games,teams}:{conference:string;round:string;games:PlayoffGame[];teams:Map<string,PlayoffTeam>}) {
- const matches=games.filter(g=>g.conference?.toUpperCase()===conference&&String(g.round).toLowerCase().includes(round)).slice(0,2);
- return <>{[0,1].map(i=>{const g=matches[i];const home=g?.home_team_id?teams.get(g.home_team_id):null;const away=g?.away_team_id?teams.get(g.away_team_id):null;return <div key={i} className="gridiron-match flex min-h-24 flex-col justify-center rounded-lg border border-white/20 p-2">{[away,home].map((t,j)=><div key={j} className="flex items-center gap-2 border-b border-white/10 py-2 last:border-0"><TeamLogo team={t??null}/><span className="truncate text-xs font-semibold text-white">{t?.name??'TBD'}</span></div>)}</div>})}</>;
+function BracketRound({conference,round,games,teams,count=2}:{conference:string;round:string;games:PlayoffGame[];teams:Map<string,PlayoffTeam>;count?:number}) {
+ const matches=games.filter(g=>g.conference?.toUpperCase()===conference&&String(g.round).toLowerCase().includes(round)).slice(0,count);
+ return <>{Array.from({length:count},(_,i)=>i).map(i=>{const g=matches[i];const home=g?.home_team_id?teams.get(g.home_team_id):null;const away=g?.away_team_id?teams.get(g.away_team_id):null;return <div key={i} className="gridiron-match flex min-h-24 flex-col justify-center rounded-lg border border-white/20 p-2">{[away,home].map((t,j)=><div key={j} className="flex items-center gap-2 border-b border-white/10 py-2 last:border-0"><TeamLogo team={t??null}/><span className="truncate text-xs font-semibold text-white">{t?.name??'TBD'}</span></div>)}</div>})}</>;
 }
 
 function useCountdown(target: string | null) {
@@ -153,7 +153,7 @@ export default function Home({ setPage, onJoinClick }: Props) {
 <div className="my-3 text-center text-amber-300">↓</div>
 <p className="mb-2 text-center text-xs text-amber-200">DIVISIONAL</p><div className="grid grid-cols-2 gap-2"><BracketRound conference="AFC" round="divisional" games={games} teams={teamById}/></div>
 <div className="my-3 text-center text-amber-300">↓</div>
-<p className="mb-2 text-center text-xs text-amber-200">AFC CHAMPIONSHIP</p><div className="mx-auto max-w-64"><BracketRound conference="AFC" round="conference" games={games} teams={teamById}/></div>
+<p className="mb-2 text-center text-xs text-amber-200">AFC CHAMPIONSHIP</p><div className="mx-auto max-w-64"><BracketRound conference="AFC" round="conference" games={games} teams={teamById} count={1}/></div>
 <div className="my-3 text-center text-amber-300">↓</div>
 <div className="my-4 rounded-xl border border-amber-400/50 bg-[#0b1c35] p-4 text-center">
 <Trophy className="mx-auto h-16 w-16 text-amber-300"/><h3 className="my-3 font-display text-2xl font-extrabold text-amber-200">SUPER BOWL</h3>
@@ -161,7 +161,7 @@ export default function Home({ setPage, onJoinClick }: Props) {
 <button onClick={()=>setPage('bracket')} className="mt-4 rounded-md border border-amber-300/50 px-4 py-2 text-xs font-bold text-amber-200">View bracket →</button>
 </div>
 <div className="my-3 text-center text-sky-300">↑</div>
-<p className="mb-2 text-center text-xs text-sky-200">NFC CHAMPIONSHIP</p><div className="mx-auto max-w-64"><BracketRound conference="NFC" round="conference" games={games} teams={teamById}/></div>
+<p className="mb-2 text-center text-xs text-sky-200">NFC CHAMPIONSHIP</p><div className="mx-auto max-w-64"><BracketRound conference="NFC" round="conference" games={games} teams={teamById} count={1}/></div>
 <div className="my-3 text-center text-sky-300">↑</div>
 <p className="mb-2 text-center text-xs text-sky-200">DIVISIONAL</p><div className="grid grid-cols-2 gap-2"><BracketRound conference="NFC" round="divisional" games={games} teams={teamById}/></div>
 <div className="my-3 text-center text-sky-300">↑</div>
