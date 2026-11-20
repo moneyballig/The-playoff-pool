@@ -90,7 +90,7 @@ export default function AdvancedLeaderboard() {
  if(busy)return <Spinner label="Loading standings…"/>;
  return <main className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
   <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-   <div><p className="text-xs font-bold uppercase tracking-[.2em] text-gold-400">NFL Playoffs · {pool.season}</p><h1 className="mt-1 font-display text-3xl font-extrabold uppercase text-white">Leaderboard</h1><p className="mt-1 text-xs text-txt-muted">Private pool standings · updates every 60 seconds</p></div>
+   <div><p className="text-xs font-bold uppercase tracking-[.2em] text-gold-400">{pool.season}-27 NFL Playoffs</p><h1 className="mt-1 font-display text-3xl font-extrabold uppercase text-white">Leaderboard</h1><p className="mt-1 text-xs text-txt-muted">Private pool standings · updates every 60 seconds</p></div>
    <span className="inline-flex items-center gap-2 text-xs text-txt-muted"><RefreshCw className={`h-4 w-4 ${refreshing?'animate-spin':''}`}/>{updated?'Updated '+updated.toLocaleTimeString():'Waiting for scores'}</span>
   </div>
   {error&&<p role="alert" className="mb-4 rounded-lg border border-amber-400/30 bg-amber-400/10 p-3 text-sm text-amber-200">{error}</p>}
