@@ -5,6 +5,7 @@ import { supabase, supabaseConfigured } from '@/lib/supabase';
 import type { Bracket } from '@/lib/types';
 import Nav, { type PageId } from '@/components/Nav';
 import Home from '@/pages/Home';
+import { LeaderboardPage, SchedulePage, AdminPage } from '@/pages/CompetitionPages';
 import BracketPage from '@/pages/BracketPage';
 import AuthModal, { JoinPoolModal } from '@/components/Modals';
 import { Card, GoldButton, GhostButton, EmptyState, Spinner } from '@/components/ui';
@@ -94,15 +95,10 @@ function EntriesPage({ onOpenBracket, onJoin }: { onOpenBracket: (id: string) =>
 }
 
 function InfoPage({ page }: { page: PageId }) {
-  const content: Record<string, { title: string; body: string; icon: typeof Trophy }> = {
-    leaderboard: { title: 'Leaderboard', body: 'Standings, correct picks, and round-by-round points will appear here as the pool is populated with entries and official game results.', icon: ListOrdered },
-    schedule: { title: 'NFL Playoff Schedule', body: 'The postseason schedule, kickoff times, live scores, quarter, and game clock will appear here once the season schedule is loaded. Scores will never be fabricated.', icon: CalendarDays },
-    admin: { title: 'Pool Administration', body: 'Pool management tools are available to the designated administrator after the backend is connected.', icon: ShieldCheck },
-    join: { title: 'Join the Pool', body: 'Sign in and enter your private invitation code to participate.', icon: Trophy },
-  };
-  const item = content[page] ?? content.leaderboard;
-  const Icon = item.icon;
-  return <main className="mx-auto max-w-4xl px-4 py-20"><section className="rounded-2xl border border-white/10 bg-card-sheen px-6 py-14 text-center shadow-card"><Icon className="mx-auto mb-4 h-10 w-10 text-gold-400" /><h1 className="font-display text-3xl font-extrabold uppercase tracking-wide text-white">{item.title}</h1><p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-txt-secondary">{item.body}</p></section></main>;
+  if (page === 'leaderboard') return <LeaderboardPage />;
+  if (page === 'schedule') return <SchedulePage />;
+  if (page === 'admin') return <AdminPage />;
+  return <main className="mx-auto max-w-4xl px-4 py-20"><section className="rounded-2xl border border-white/10 bg-card-sheen px-6 py-14 text-center shadow-card"><Trophy className="mx-auto mb-4 h-10 w-10 text-gold-400" /><h1 className="font-display text-3xl font-extrabold uppercase tracking-wide text-white">Join the Pool</h1><p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-txt-secondary">Sign in and enter your private invitation code to participate.</p></section></main>;
 }
 
 function AppContent() {
