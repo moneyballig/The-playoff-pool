@@ -117,6 +117,13 @@ export function AdminPage() {
   const [teamAbbr, setTeamAbbr] = useState('');
   const [conference, setConference] = useState<'AFC'|'NFC'>('AFC');
   const [seed, setSeed] = useState('1');
+  const [gameRound, setGameRound] = useState<PlayoffGame['round']>('wild_card');
+  const [gameSlot, setGameSlot] = useState('1');
+  const [gameConference, setGameConference] = useState<'AFC'|'NFC'|'SB'>('AFC');
+  const [homeTeamId, setHomeTeamId] = useState('');
+  const [awayTeamId, setAwayTeamId] = useState('');
+  const [kickoff, setKickoff] = useState('');
+  const [syncing, setSyncing] = useState(false);
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
   const allowed = isPlatformAdmin || isPoolAdmin;
@@ -139,6 +146,52 @@ export function AdminPage() {
     const r = await fn(); setBusy(false);
     if (r?.error) setNotice(r.error.message); else { setNotice(success); await load(); await refresh(); }
   };
+  const syncEspn = async () => {
+    if (!pool || !teams.length || !games.length || syncing) return;
+    setSyncing(true); setNotice('');
+    try {
+      const response = await fetch('https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=3&season=' + pool.season);
+      if (!response.ok) throw new Error('ESPN scoreboard is temporarily unavailable');
+      const data = await response.json();
+      let updated = 0;
+      for (const event of data.events ?? []) {
+        const competition = event.competitions?.[0];
+        const competitors = competition?.competitors ?? [];
+        const h = competitors.find((x:any)=>x.homeAway==='home');
+        const a = competitors.find((x:any)=>x.homeAway==='away');
+        if (!h?.team?.abbreviation || !a?.team?.abbreviation) continue;
+        const home = teams.find(t=>t.abbreviation.toLowerCase()===h.team.abbreviation.toLowerCase());
+        const away = teams.find(t=>t.abbreviation.toLowerCase()===a.team.abbreviation.toLowerCase());
+        if (!home || !away) continue;
+        const game = games.find(g=>g.home_team_id===home.id && g.away_team_id===away.id);
+        if (!game) continue;
+        const state = competition?.status?.type?.state ?? event.status?.type?.state;
+        const description = (competition?.status?.type?.description ?? '').toLowerCase();
+        const nextStatus: PlayoffGame['status'] = state==='post' ? 'final' : state==='in' ? (description.includes('half') ? 'halftime' : 'live') : 'upcoming';
+        const hs = h.score === undefined || h.score === '' ? null : Number(h.score);
+        const as = a.score === undefined || a.score === '' ? null : Number(a.score);
+        const result = await supabase.from('playoff_games').update({
+          home_score: hs, away_score: as, status: nextStatus,
+          quarter: competition?.status?.period ? String(competition.status.period) : null,
+          clock: competition?.status?.displayClock ?? null,
+          kickoff: event.date ?? game.kickoff,
+          source: 'api',
+          winner_team_id: nextStatus==='final' && hs!==null && as!==null ? (hs>as ? home.id : away.id) : null
+        }).eq('id',game.id);
+        if (result.error) throw result.error;
+        updated++;
+      }
+      setNotice('ESPN sync complete · ' + updated + ' pool games updated');
+      await load();
+    } catch (e:any) {
+      setNotice(e?.message ?? 'Could not sync ESPN scores');
+    } finally { setSyncing(false); }
+  };
+  useEffect(() => {
+    if (!allowed || !pool || !games.length || !teams.length) return;
+    const timer = window.setInterval(() => { void syncEspn(); }, 30000);
+    return () => window.clearInterval(timer);
+  }, [allowed, pool, games, teams, syncing]);
   if (!allowed) return <PageShell title="Pool administration" eyebrow="Restricted"><EmptyState title="Administrator access required" body="Only the private pool administrator can manage participants, entries, game results, and announcements." /></PageShell>;
   if (!pool) return <PageShell title="Pool administration" eyebrow="Restricted"><EmptyState title="No pool attached" body="Join the default pool before opening admin controls." /></PageShell>;
   return <PageShell title="Pool administration" eyebrow="Commissioner console">
@@ -147,7 +200,8 @@ export function AdminPage() {
       <Card className="p-5"><SectionTitle><span className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-gold-400"/> Pool settings</span></SectionTitle><label className="mb-2 block text-xs text-txt-muted">Bracket submission deadline</label><input type="datetime-local" value={deadline} onChange={e=>setDeadline(e.target.value)} className="mb-3 w-full rounded-lg border border-white/10 bg-navy-950 p-3 text-white"/><GoldButton disabled={busy} onClick={()=>act(()=>supabase.rpc('pp_set_pool_deadline',{p_pool:pool.id,p_deadline:deadline ? new Date(deadline).toISOString() : null}),'Deadline saved')}>Save deadline</GoldButton><div className="my-5 border-t border-white/10"/><label className="mb-2 block text-xs text-txt-muted">Private invitation code</label><div className="flex gap-2"><input value={code} onChange={e=>setCode(e.target.value.toUpperCase())} className="min-w-0 flex-1 rounded-lg border border-white/10 bg-navy-950 p-3 font-bold tracking-widest text-gold-400"/><GoldButton disabled={busy || !code.trim()} onClick={()=>act(()=>supabase.from('pool_invitations').insert({pool_id:pool.id,code:code.trim(),active:true}),'New invitation code created')}>Add code</GoldButton></div><p className="mt-2 text-xs text-txt-muted">Share this code only with invited participants. Existing codes remain active until disabled in the database.</p></Card>
       <Card className="p-5"><SectionTitle><span className="flex items-center gap-2"><Megaphone className="h-5 w-5 text-gold-400"/> Announcement</span></SectionTitle><input value={announcementTitle} onChange={e=>setAnnouncementTitle(e.target.value)} placeholder="Announcement title" className="mb-3 w-full rounded-lg border border-white/10 bg-navy-950 p-3 text-white"/><textarea value={announcementBody} onChange={e=>setAnnouncementBody(e.target.value)} placeholder="Message to pool participants" rows={4} className="mb-3 w-full rounded-lg border border-white/10 bg-navy-950 p-3 text-white"/><GoldButton disabled={busy || !announcementTitle.trim() || !announcementBody.trim()} onClick={()=>act(()=>supabase.from('announcements').insert({pool_id:pool.id,title:announcementTitle.trim(),body:announcementBody.trim()}),'Announcement posted')}>Post announcement</GoldButton></Card>
       <Card className="p-5"><SectionTitle><span className="flex items-center gap-2"><Trophy className="h-5 w-5 text-gold-400"/> Team field</span></SectionTitle><div className="grid grid-cols-2 gap-2"><input value={teamName} onChange={e=>setTeamName(e.target.value)} placeholder="Team name" className="rounded-lg border border-white/10 bg-navy-950 p-2.5 text-sm text-white"/><input value={teamAbbr} onChange={e=>setTeamAbbr(e.target.value.toUpperCase())} placeholder="Abbreviation" className="rounded-lg border border-white/10 bg-navy-950 p-2.5 text-sm text-white"/><select value={conference} onChange={e=>setConference(e.target.value as 'AFC'|'NFC')} className="rounded-lg border border-white/10 bg-navy-950 p-2.5 text-sm text-white"><option>AFC</option><option>NFC</option></select><select value={seed} onChange={e=>setSeed(e.target.value)} className="rounded-lg border border-white/10 bg-navy-950 p-2.5 text-sm text-white">{[1,2,3,4,5,6,7].map(n=><option key={n} value={n}>{n} seed</option>)}</select></div><GoldButton className="mt-3" disabled={busy || !teamName.trim() || !teamAbbr.trim()} onClick={()=>act(()=>supabase.from('playoff_teams').upsert({season:pool.season,name:teamName.trim(),abbreviation:teamAbbr.trim(),conference,seed:Number(seed)},{onConflict:'season,conference,seed'}),'Team saved')}>Save team</GoldButton><p className="mt-2 text-xs text-txt-muted">{teams.length} of 14 teams entered</p></Card>
-      <Card className="p-5"><SectionTitle><span className="flex items-center gap-2"><CalendarDays className="h-5 w-5 text-gold-400"/> Game center & scores</span></SectionTitle><select value={selectedGame} onChange={e=>setSelectedGame(e.target.value)} className="mb-3 w-full rounded-lg border border-white/10 bg-navy-950 p-3 text-sm text-white"><option value="">Select game</option>{games.map(g=><option key={g.id} value={g.id}>{g.round.replace('_',' ')} · game {g.game_slot}</option>)}</select><div className="grid grid-cols-2 gap-2"><input type="number" min="0" value={awayScore} onChange={e=>setAwayScore(e.target.value)} placeholder="Away score" className="rounded-lg border border-white/10 bg-navy-950 p-3 text-white"/><input type="number" min="0" value={homeScore} onChange={e=>setHomeScore(e.target.value)} placeholder="Home score" className="rounded-lg border border-white/10 bg-navy-950 p-3 text-white"/></div><select value={status} onChange={e=>setStatus(e.target.value as any)} className="my-3 w-full rounded-lg border border-white/10 bg-navy-950 p-3 text-white"><option value="upcoming">Upcoming</option><option value="live">Live</option><option value="halftime">Halftime</option><option value="final">Final</option></select><GoldButton disabled={busy || !selectedGame || homeScore==='' || awayScore===''} onClick={()=>act(()=>supabase.from('playoff_games').update({home_score:Number(homeScore),away_score:Number(awayScore),status,source:'manual'}).eq('id',selectedGame),'Game result updated and standings recalculated')}>Update score</GoldButton><p className="mt-2 text-xs text-txt-muted">Final scores trigger automatic bracket scoring. For live game clocks, update the quarter and clock fields through the game feed.</p></Card>
+      <Card className="p-5"><SectionTitle><span className="flex items-center gap-2"><CalendarDays className="h-5 w-5 text-gold-400"/> Build playoff matchups</span></SectionTitle><div className="grid grid-cols-2 gap-2"><select value={gameRound} onChange={e=>setGameRound(e.target.value as PlayoffGame['round'])} className="rounded-lg border border-white/10 bg-navy-950 p-2.5 text-sm text-white"><option value="wild_card">Wild Card</option><option value="divisional">Divisional</option><option value="conference">Conference Championship</option><option value="super_bowl">Super Bowl</option></select><select value={gameConference} onChange={e=>setGameConference(e.target.value as 'AFC'|'NFC'|'SB')} className="rounded-lg border border-white/10 bg-navy-950 p-2.5 text-sm text-white"><option value="AFC">AFC</option><option value="NFC">NFC</option><option value="SB">Super Bowl</option></select><input type="number" min="1" max="13" value={gameSlot} onChange={e=>setGameSlot(e.target.value)} placeholder="Game slot" className="rounded-lg border border-white/10 bg-navy-950 p-2.5 text-sm text-white"/><input type="datetime-local" value={kickoff} onChange={e=>setKickoff(e.target.value)} className="rounded-lg border border-white/10 bg-navy-950 p-2.5 text-sm text-white"/><select value={awayTeamId} onChange={e=>setAwayTeamId(e.target.value)} className="rounded-lg border border-white/10 bg-navy-950 p-2.5 text-sm text-white"><option value="">Away team</option>{teams.map(t=><option key={t.id} value={t.id}>{t.conference} #{t.seed} · {t.name}</option>)}</select><select value={homeTeamId} onChange={e=>setHomeTeamId(e.target.value)} className="rounded-lg border border-white/10 bg-navy-950 p-2.5 text-sm text-white"><option value="">Home team</option>{teams.map(t=><option key={t.id} value={t.id}>{t.conference} #{t.seed} · {t.name}</option>)}</select></div><GoldButton className="mt-3" disabled={busy || !homeTeamId || !awayTeamId || homeTeamId===awayTeamId || !gameSlot} onClick={()=>act(()=>supabase.from('playoff_games').upsert({season:pool.season,round:gameRound,game_slot:Number(gameSlot),conference:gameConference==='SB'?null:gameConference,home_team_id:homeTeamId,away_team_id:awayTeamId,kickoff:kickoff?new Date(kickoff).toISOString():null,status:'upcoming',source:'manual'},{onConflict:'season,round,game_slot'}),'Matchup saved')}>Save matchup</GoldButton><p className="mt-2 text-xs text-txt-muted">{games.length} games configured · use unique game slots within each round</p></Card>
+      <Card className="p-5"><SectionTitle><span className="flex items-center gap-2"><CalendarDays className="h-5 w-5 text-gold-400"/> Game center & scores</span></SectionTitle><select value={selectedGame} onChange={e=>setSelectedGame(e.target.value)} className="mb-3 w-full rounded-lg border border-white/10 bg-navy-950 p-3 text-sm text-white"><option value="">Select game</option>{games.map(g=><option key={g.id} value={g.id}>{g.round.replace('_',' ')} · game {g.game_slot}</option>)}</select><div className="grid grid-cols-2 gap-2"><input type="number" min="0" value={awayScore} onChange={e=>setAwayScore(e.target.value)} placeholder="Away score" className="rounded-lg border border-white/10 bg-navy-950 p-3 text-white"/><input type="number" min="0" value={homeScore} onChange={e=>setHomeScore(e.target.value)} placeholder="Home score" className="rounded-lg border border-white/10 bg-navy-950 p-3 text-white"/></div><select value={status} onChange={e=>setStatus(e.target.value as any)} className="my-3 w-full rounded-lg border border-white/10 bg-navy-950 p-3 text-white"><option value="upcoming">Upcoming</option><option value="live">Live</option><option value="halftime">Halftime</option><option value="final">Final</option></select><GoldButton disabled={busy || !selectedGame || homeScore==='' || awayScore===''} onClick={()=>act(()=>supabase.from('playoff_games').update({home_score:Number(homeScore),away_score:Number(awayScore),status,source:'manual'}).eq('id',selectedGame),'Game result updated and standings recalculated')}>Update score</GoldButton><div className="mt-3"><GoldButton disabled={syncing || !games.length || !teams.length} onClick={syncEspn}><RefreshCw className="h-4 w-4"/>{syncing ? "Syncing ESPN…" : "Sync live ESPN scores now"}</GoldButton></div><p className="mt-2 text-xs text-txt-muted">The commissioner screen also syncs every 30 seconds while open. Final scores trigger automatic bracket scoring.</p></Card>
     </div>
     <Card className="mt-5 p-5"><SectionTitle><span className="flex items-center gap-2"><Users className="h-5 w-5 text-gold-400"/> Participants ({members.length})</span></SectionTitle>{members.length===0?<p className="text-sm text-txt-muted">No participants yet.</p>:<div className="divide-y divide-white/5">{members.map(m=><div key={m.user_id} className="flex items-center justify-between gap-3 py-3"><div><b className="block text-sm text-white">{m.display_name}</b><span className="text-xs text-txt-muted">{m.email} · {m.entry_count} entries · {m.role}</span></div>{m.role!=='admin'&&<GhostButton onClick={()=>act(()=>supabase.rpc('pp_revoke_member',{p_pool:pool.id,p_user:m.user_id}),'Participant removed')}><Trash2 className="h-4 w-4"/> Remove</GhostButton>}</div>)}</div>}</Card>
     <div className="mt-5 flex justify-end"><GhostButton onClick={load}><RefreshCw className="h-4 w-4"/> Refresh data</GhostButton></div>
