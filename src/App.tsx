@@ -6,7 +6,6 @@ import type { Bracket } from '@/lib/types';
 import Nav, { type PageId } from '@/components/Nav';
 import Home from '@/pages/Home';
 import { LeaderboardPage, SchedulePage, AdminPage } from '@/pages/CompetitionPages';
-import BracketPage from '@/pages/BracketPage';
 import AuthModal, { JoinPoolModal } from '@/components/Modals';
 import { Card, GoldButton, GhostButton, EmptyState, Spinner } from '@/components/ui';
 
@@ -159,16 +158,15 @@ function InfoPage({ page }: { page: PageId }) {
 function AppContent() {
   const { user } = useAuth();
   const [page, setPage] = useState<PageId>('home');
-  const [bracketId, setBracketId] = useState<string | null>(null);
+  
   const [authOpen, setAuthOpen] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
   const openJoin = () => {
     if (!user) setAuthOpen(true);
     else setJoinOpen(true);
   };
-  const openBracket = (id: string) => {
-    setBracketId(id);
-    setPage('bracket');
+  const openBracket = (_id: string) => {
+    setPage('home');
   };
 
   return (
@@ -176,7 +174,7 @@ function AppContent() {
       <Nav page={page} setPage={setPage} onAuthClick={() => setAuthOpen(true)} />
       {page === 'home' && <Home setPage={setPage} onJoinClick={openJoin} />}
       {page === 'entries' && <EntriesPage onOpenBracket={openBracket} onJoin={openJoin} />}
-      {page === 'bracket' && (bracketId ? <BracketPage bracketId={bracketId} onOpenEntries={() => setPage('entries')} /> : <EntriesPage onOpenBracket={openBracket} onJoin={openJoin} />)}
+
       {page !== 'home' && page !== 'entries' && page !== 'bracket' && <InfoPage page={page} />}
       {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
       {joinOpen && <JoinPoolModal onClose={() => setJoinOpen(false)} />}
