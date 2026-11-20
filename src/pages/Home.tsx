@@ -15,6 +15,16 @@ function ConferenceSeeds({conference,teams}:{conference:string;teams:PlayoffTeam
  const bySeed=(n:number)=>seeded.find(t=>t.seed===n);
  return <div className="space-y-3">{[[1],[2,7],[3,6],[4,5]].map((pair,i)=><div key={i} className="gridiron-match rounded-lg border border-white/20 p-2">{pair.map(n=><div key={n} className="flex items-center gap-2 border-b border-white/10 py-1.5 last:border-0"><span className="w-4 text-xs font-bold text-amber-300">{n}</span><TeamLogo team={bySeed(n)??null}/><span className="truncate text-xs font-semibold text-white">{bySeed(n)?.name??'TBD'}</span></div>)}{pair.length===1&&<span className="pl-6 text-[10px] uppercase text-amber-200">First-round bye</span>}</div>)}</div>;
 }
+function MobileWildCard({conference,teams}:{conference:'AFC'|'NFC';teams:PlayoffTeam[]}) {
+ const seeded=teams.filter(t=>t.conference===conference);
+ const bySeed=(seed:number)=>seeded.find(t=>t.seed===seed)??null;
+ return <div className="grid grid-cols-2 gap-2">
+  {([[2,7],[3,6],[4,5]] as const).map((pair,i)=><div key={i} className="gridiron-match flex min-h-24 flex-col justify-center rounded-lg border border-white/20 p-2">
+   {pair.map(seed=>{const team=bySeed(seed);return <div key={seed} className="flex min-w-0 items-center gap-1 border-b border-white/10 py-2 last:border-0"><span className="w-3 shrink-0 text-[10px] font-bold text-amber-300">{seed}</span><TeamLogo team={team} size={24}/><span className="min-w-0 truncate text-[11px] font-semibold text-white">{team?.name??'TBD'}</span></div>})}
+  </div>)}
+  <div className="gridiron-match flex min-h-24 flex-col items-center justify-center gap-1 rounded-lg border border-amber-400/30 p-2"><span className="text-[10px] font-bold uppercase text-amber-200">#1 Seed Bye</span><TeamLogo team={bySeed(1)} size={28}/><span className="max-w-full truncate text-[11px] font-semibold text-white">{bySeed(1)?.name??'TBD'}</span></div>
+ </div>;
+}
 function BracketRound({conference,round,games,teams}:{conference:string;round:string;games:PlayoffGame[];teams:Map<string,PlayoffTeam>}) {
  const matches=games.filter(g=>g.conference?.toUpperCase()===conference&&String(g.round).toLowerCase().includes(round)).slice(0,2);
  return <>{[0,1].map(i=>{const g=matches[i];const home=g?.home_team_id?teams.get(g.home_team_id):null;const away=g?.away_team_id?teams.get(g.away_team_id):null;return <div key={i} className="gridiron-match flex min-h-24 flex-col justify-center rounded-lg border border-white/20 p-2">{[away,home].map((t,j)=><div key={j} className="flex items-center gap-2 border-b border-white/10 py-2 last:border-0"><TeamLogo team={t??null}/><span className="truncate text-xs font-semibold text-white">{t?.name??'TBD'}</span></div>)}</div>})}</>;
@@ -139,7 +149,7 @@ export default function Home({ setPage, onJoinClick }: Props) {
           </div>
           <div className="gridiron-mobile-bracket p-3 sm:p-5 lg:hidden">
 <h3 className="mb-3 text-center font-display text-xl font-extrabold text-amber-300">AFC</h3>
-<p className="mb-2 text-center text-xs text-amber-200">WILD CARD</p><ConferenceSeeds conference="AFC" teams={teams}/>
+<p className="mb-2 text-center text-xs text-amber-200">WILD CARD</p><MobileWildCard conference="AFC" teams={teams}/>
 <div className="my-3 text-center text-amber-300">↓</div>
 <p className="mb-2 text-center text-xs text-amber-200">DIVISIONAL</p><div className="grid grid-cols-2 gap-2"><BracketRound conference="AFC" round="divisional" games={games} teams={teamById}/></div>
 <div className="my-3 text-center text-amber-300">↓</div>
@@ -155,7 +165,7 @@ export default function Home({ setPage, onJoinClick }: Props) {
 <div className="my-3 text-center text-sky-300">↑</div>
 <p className="mb-2 text-center text-xs text-sky-200">DIVISIONAL</p><div className="grid grid-cols-2 gap-2"><BracketRound conference="NFC" round="divisional" games={games} teams={teamById}/></div>
 <div className="my-3 text-center text-sky-300">↑</div>
-<p className="mb-2 text-center text-xs text-sky-200">WILD CARD</p><ConferenceSeeds conference="NFC" teams={teams}/>
+<p className="mb-2 text-center text-xs text-sky-200">WILD CARD</p><MobileWildCard conference="NFC" teams={teams}/>
 <h3 className="mt-4 text-center font-display text-xl font-extrabold text-sky-300">NFC</h3>
 </div>
             <div className="gridiron-bracket-scroll hidden overflow-x-auto p-4 sm:p-6 lg:block">
