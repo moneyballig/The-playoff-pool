@@ -101,3 +101,12 @@ body {background:radial-gradient(ellipse at 50% 0%,#10254c 0%,#050b18 55%); }
 
 /* Hero: American football field with packed crowd in background */
 .gridiron-hero { background-position: center 53%; }
+
+/* Desktop dashboard: tidy independent panels and prevent header/action collisions */
+@media (min-width:1024px) {
+ .home-dashboard-grid > section > div:first-child {flex-wrap:wrap;align-items:flex-start;gap:12px;}
+ .home-dashboard-grid > section > div:first-child h2 {font-size:1.2rem;line-height:1.35;min-width:0;overflow-wrap:anywhere;}
+ .home-dashboard-grid > section > div:first-child button {flex-shrink:0;font-size:.75rem;}
+ .home-dashboard-grid > section {align-self:stretch;}
+ .home-dashboard-grid .gridiron-dashboard-card {min-width:0;}
+}
