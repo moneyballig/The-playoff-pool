@@ -81,7 +81,26 @@ export default function HomeBracketEditor({teams,games,brackets,onJoinClick,onEn
     {error&&<p role="alert" className="mt-2 text-sm text-red-300">{error}</p>}
     <p className="mt-2 text-xs text-slate-300">{active?'Select a team in each matchup to advance it. Save your picks, then submit when all 13 are selected.':'The bracket is visible to everyone. Sign in and create an entry to make picks.'}</p>
    </div>
-   {loading?<p className="p-10 text-center text-amber-200">Loading your saved predictions…</p>:<div className="gridiron-bracket-scroll overflow-x-auto p-4 sm:p-6">
+   {loading?<p className="p-10 text-center text-amber-200">Loading your saved predictions…</p>:<>
+    <div className="gridiron-mobile-bracket space-y-4 p-3 sm:p-5 lg:hidden">
+      <div className="flex flex-col items-center gap-1"><img src="https://a.espncdn.com/i/teamlogos/nfl/500/afc.png" alt="AFC" className="h-14 w-14 object-contain"/><h3 className="font-display text-sm font-extrabold text-amber-300">AFC</h3></div>
+      <div><p className="mb-2 text-center text-xs font-bold uppercase tracking-widest text-amber-200">Wild Card</p><div className="grid grid-cols-2 gap-2">{derived.afcWC.map(m=><Game key={m.key} m={m} locked={locked||!active||busy} pick={pick}/>)}<div className="gridiron-match flex flex-col items-center justify-center gap-1 rounded-lg border border-amber-400/30 p-2 text-center"><span className="text-[10px] font-bold uppercase text-amber-200">#1 Seed Bye</span><TeamLogo team={teams.find(t=>t.conference==='AFC'&&t.seed===1)??null} size={28}/><span className="text-[11px] font-semibold text-white">{teams.find(t=>t.conference==='AFC'&&t.seed===1)?.name??'TBD'}</span></div></div></div>
+      <div className="mx-auto h-8 w-px bg-amber-300/60" aria-hidden="true"/>
+      <div><p className="mb-2 text-center text-xs font-bold uppercase tracking-widest text-amber-200">Divisional</p><div className="grid grid-cols-2 gap-2">{derived.afcDiv.map(m=><Game key={m.key} m={m} locked={locked||!active||busy} pick={pick}/>)}</div></div>
+      <div className="text-center text-amber-300" aria-hidden="true">↓</div>
+      <div><p className="mb-2 text-center text-xs font-bold uppercase tracking-widest text-amber-200">AFC Championship</p><div className="mx-auto max-w-xs">{derived.afcConf&&<Game m={derived.afcConf} locked={locked||!active||busy} pick={pick}/>}</div></div>
+      <div className="text-center text-amber-300" aria-hidden="true">↓</div>
+      <div className="mx-auto max-w-sm rounded-xl border border-amber-400/50 bg-[#0b1c35] p-4 text-center"><Trophy className="mx-auto mb-2 h-14 w-14 text-amber-300"/><h3 className="mb-3 font-display text-xl font-extrabold uppercase text-amber-200">Super Bowl</h3>{derived.superBowl&&<Game m={derived.superBowl} locked={locked||!active||busy} pick={pick}/>} {derived.champion&&<p className="mt-3 text-sm font-bold text-amber-300">Your champion: {derived.champion.name}</p>}</div>
+      <div className="text-center text-sky-300" aria-hidden="true">↑</div>
+      <div><p className="mb-2 text-center text-xs font-bold uppercase tracking-widest text-sky-200">NFC Championship</p><div className="mx-auto max-w-xs">{derived.nfcConf&&<Game m={derived.nfcConf} locked={locked||!active||busy} pick={pick}/>}</div></div>
+      <div className="text-center text-sky-300" aria-hidden="true">↑</div>
+      <div><p className="mb-2 text-center text-xs font-bold uppercase tracking-widest text-sky-200">Divisional</p><div className="grid grid-cols-2 gap-2">{derived.nfcDiv.map(m=><Game key={m.key} m={m} locked={locked||!active||busy} pick={pick}/>)}</div></div>
+      <div className="mx-auto h-8 w-px bg-sky-300/60" aria-hidden="true"/>
+      <div><p className="mb-2 text-center text-xs font-bold uppercase tracking-widest text-sky-200">Wild Card</p><div className="grid grid-cols-2 gap-2">{derived.nfcWC.map(m=><Game key={m.key} m={m} locked={locked||!active||busy} pick={pick}/>)}<div className="gridiron-match flex flex-col items-center justify-center gap-1 rounded-lg border border-sky-400/30 p-2 text-center"><span className="text-[10px] font-bold uppercase text-sky-200">#1 Seed Bye</span><TeamLogo team={teams.find(t=>t.conference==='NFC'&&t.seed===1)??null} size={28}/><span className="text-[11px] font-semibold text-white">{teams.find(t=>t.conference==='NFC'&&t.seed===1)?.name??'TBD'}</span></div></div></div>
+      <div className="flex flex-col items-center gap-1"><img src="https://a.espncdn.com/i/teamlogos/nfl/500/nfc.png" alt="NFC" className="h-14 w-14 object-contain"/><h3 className="font-display text-sm font-extrabold text-sky-300">NFC</h3></div>
+      <p className="text-center text-xs text-slate-300">Tap a team to advance it. No sideways scrolling required.</p>
+    </div>
+    <div className="gridiron-bracket-scroll hidden overflow-x-auto p-4 sm:p-6 lg:block">
     <div className="grid min-w-[1190px] grid-cols-[1.3fr_1fr_0.9fr_0.9fr_0.9fr_1fr_1.3fr] items-center gap-3 lg:gap-5">
      <Round title="AFC Wild Card" items={derived.afcWC} locked={locked||!active||busy} pick={pick}/>
      <Round title="AFC Divisional" items={derived.afcDiv} locked={locked||!active||busy} pick={pick}/>
@@ -94,7 +113,7 @@ export default function HomeBracketEditor({teams,games,brackets,onJoinClick,onEn
      <Round title="NFC Wild Card" items={derived.nfcWC} locked={locked||!active||busy} pick={pick}/>
     </div>
     <p className="mt-5 text-center text-xs text-slate-400">NFL reseeding is applied automatically. The #1 seeds enter in the Divisional round.</p>
-   </div>}
+   </div></>}
    {active&&<div className="flex flex-wrap items-center justify-between gap-3 border-t border-amber-300/25 bg-[#08172d] p-4 sm:px-8">
     <label className="flex items-center gap-2 text-sm text-white">Super Bowl total points tiebreaker <input aria-label="Super Bowl total points tiebreaker" type="number" min="0" max="200" className="w-20 rounded-md border border-white/20 bg-[#0b1c35] px-2 py-2 text-white" value={tiebreaker} disabled={locked} onChange={e=>setTiebreaker(e.target.value)}/></label>
     <div className="flex flex-wrap gap-3"><button type="button" disabled={locked||busy} onClick={()=>void persist(false)} className="inline-flex items-center gap-2 rounded-lg border border-amber-300/50 px-4 py-2 text-sm font-bold text-amber-200 disabled:opacity-40"><Save className="h-4 w-4"/>Save picks</button><GoldButton disabled={locked||busy||count!==13} onClick={()=>void persist(true)}><Trophy className="h-4 w-4"/>{active.submitted||submittedIds.includes(active.id)?'Resubmit bracket':'Submit bracket'}</GoldButton></div>
