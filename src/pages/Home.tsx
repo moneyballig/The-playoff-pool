@@ -184,9 +184,9 @@ export default function Home({ setPage, onJoinClick }: Props) {
         </div>
       </section>
       <div className="mx-auto max-w-[1500px] px-4 py-5 sm:px-7">
-        <div className="grid gap-4 lg:grid-cols-3">
+        <div className="grid gap-5 lg:grid-cols-12 lg:items-stretch">
         {!user && (
-          <section className="mb-10">
+          <section className="mb-10 lg:col-span-12">
             <EmptyState
               title="Welcome to the pool"
               body="Sign in or create an account, then enter your private invitation code to start filling out playoff brackets. The first account created becomes the pool administrator."
@@ -196,7 +196,7 @@ export default function Home({ setPage, onJoinClick }: Props) {
         )}
 
         {user && pool && (
-          <section className="mb-12">
+          <section className="mb-12 lg:col-span-5 lg:mb-0 lg:min-w-0 lg:rounded-xl lg:border lg:border-white/10 lg:bg-[#0c1b33]/80 lg:p-5">
             <SectionTitle
               right={
                 <GhostButton onClick={() => setPage('entries')}>
@@ -213,7 +213,7 @@ export default function Home({ setPage, onJoinClick }: Props) {
                 action={<GoldButton onClick={() => setPage('entries')}>Create your first bracket</GoldButton>}
               />
             ) : (
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                 {brackets.map((b) => (
                   <EntryMiniCard key={b.id} bracket={b} setPage={setPage} />
                 ))}
@@ -223,11 +223,11 @@ export default function Home({ setPage, onJoinClick }: Props) {
         )}
 
         {leaders.length > 0 && (
-          <section className="mb-12">
+          <section className="mb-12 lg:col-span-4 lg:mb-0 lg:min-w-0 lg:rounded-xl lg:border lg:border-white/10 lg:bg-[#0c1b33]/80 lg:p-5">
             <SectionTitle right={<GhostButton onClick={() => setPage('leaderboard')}>Full leaderboard <ChevronRight className="h-4 w-4" /></GhostButton>}>
               Leaderboard leaders
             </SectionTitle>
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
               {leaders.slice(0, 3).map((row, i) => {
                 const medal = ['text-gold-400', 'text-txt-secondary', 'text-orange-brand'][i];
                 return (
@@ -248,7 +248,7 @@ export default function Home({ setPage, onJoinClick }: Props) {
         )}
 
         {upcoming.length > 0 && (
-          <section className="mb-12">
+          <section className="mb-12 lg:col-span-12 lg:mb-0 lg:min-w-0 lg:rounded-xl lg:border lg:border-white/10 lg:bg-[#0c1b33]/80 lg:p-5">
             <SectionTitle right={<GhostButton onClick={() => setPage('schedule')}>Full schedule <ChevronRight className="h-4 w-4" /></GhostButton>}>
               Upcoming playoff games
             </SectionTitle>
@@ -289,7 +289,7 @@ export default function Home({ setPage, onJoinClick }: Props) {
         )}
 
         {pool && (
-          <section>
+          <section className="lg:col-span-3 lg:min-w-0 lg:rounded-xl lg:border lg:border-white/10 lg:bg-[#0c1b33]/80 lg:p-5">
             <SectionTitle>
               <span className="inline-flex items-center gap-2">
                 <Megaphone className="h-6 w-6 text-gold-400" /> Pool announcements
@@ -312,7 +312,7 @@ export default function Home({ setPage, onJoinClick }: Props) {
         )}
 
         {user && !pool && (
-          <section className="mb-10">
+          <section className="mb-10 lg:col-span-12">
             <EmptyState
               title={`You're signed in, ${profile?.display_name ?? ''}`}
               body="You haven't joined a pool yet. Enter the private invitation code you received to join the competition."
