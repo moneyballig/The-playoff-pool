@@ -138,12 +138,12 @@ export default function Home({ setPage, onJoinClick }: Props) {
             <span className="font-display text-xl font-extrabold italic text-sky-300 sm:text-2xl">NFC</span>
           </div>
           <div className="gridiron-bracket-scroll overflow-x-auto p-4 sm:p-6">
-            <div className="grid min-w-[1050px] grid-cols-[1.2fr_1fr_0.8fr_1fr_1.2fr] items-center gap-3 lg:gap-5">
-              {(['AFC','AFC','SUPER BOWL','NFC','NFC'] as const).map((c,i)=><div key={i} className="text-center font-display text-xs font-bold uppercase tracking-wider text-amber-200">{i===0||i===4?'Wild Card':i===1||i===3?'Divisional':c}</div>)}
+            <div className="grid min-w-[1240px] grid-cols-[1.3fr_1fr_0.9fr_0.85fr_0.9fr_1fr_1.3fr] items-center gap-3 lg:gap-5">
+              {(['Wild Card','Divisional','Conference Championship','Super Bowl','Conference Championship','Divisional','Wild Card'] as const).map((c,i)=><div key={i} className="text-center font-display text-xs font-bold uppercase tracking-wider text-amber-200">{c}</div>)}
               <div className="space-y-3">{['AFC'].map(conf=><ConferenceSeeds key={conf} conference={conf} teams={teams}/>)}</div>
-              <div className="space-y-7"><BracketRound conference="AFC" round="divisional" games={games} teams={teamById}/></div>
+              <div className="space-y-7"><BracketRound conference="AFC" round="divisional" games={games} teams={teamById}/></div>\n              <div className="pt-8"><BracketRound conference="AFC" round="conference" games={games} teams={teamById}/></div>
               <div className="flex flex-col items-center justify-center gap-5"><Trophy className="h-20 w-20 text-amber-300 drop-shadow-[0_0_20px_rgba(251,191,36,.45)]"/><div className="rounded-lg border border-amber-400/60 bg-amber-400/10 px-4 py-2 text-center font-display text-xl font-extrabold uppercase text-amber-200">Super Bowl</div><button onClick={()=>setPage('bracket')} className="rounded-md border border-amber-300/50 px-4 py-2 text-xs font-bold text-amber-200 hover:bg-amber-400/10">View bracket →</button></div>
-              <div className="space-y-7"><BracketRound conference="NFC" round="divisional" games={games} teams={teamById}/></div>
+              <div className="pt-8"><BracketRound conference="NFC" round="conference" games={games} teams={teamById}/></div>\n              <div className="space-y-7"><BracketRound conference="NFC" round="divisional" games={games} teams={teamById}/></div>
               <div className="space-y-3"><ConferenceSeeds conference="NFC" teams={teams}/></div>
             </div>
             <p className="mt-5 text-center text-xs text-slate-400">Bracket shows actual configured playoff seeds and games. Empty slots remain TBD until set by the pool administrator.</p>
