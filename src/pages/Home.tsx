@@ -184,7 +184,7 @@ export default function Home({ setPage, onJoinClick }: Props) {
         </div>
       </section>
       <div className="mx-auto max-w-[1500px] px-4 py-5 sm:px-7">
-        <div className="grid gap-5 lg:grid-cols-12 lg:items-stretch">
+        <div className="home-dashboard-grid grid gap-5 lg:grid-cols-12 lg:items-stretch">
         {!user && (
           <section className="mb-10 lg:col-span-12">
             <EmptyState
