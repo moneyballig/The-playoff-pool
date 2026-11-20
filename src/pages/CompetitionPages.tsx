@@ -44,7 +44,8 @@ export function LeaderboardPage() {
 }
 
 export function SchedulePage() {
-  const { pool } = useAuth();
+  const { pool, user } = useAuth();
+  const [myPicks, setMyPicks] = useState<{bracket_id:string;pick_key:string;team_id:string;entry_name:string}[]>([]);
   const [games, setGames] = useState<PlayoffGame[]>([]);
   const [teams, setTeams] = useState<PlayoffTeam[]>([]);
   const [feed, setFeed] = useState<any[]>([]);
@@ -77,6 +78,17 @@ export function SchedulePage() {
     const timer = window.setInterval(load, 30000);
     return () => { live = false; window.clearInterval(timer); };
   }, [pool]);
+  useEffect(() => {
+    if (!pool || !user) { setMyPicks([]); return; }
+    let live=true;
+    const load=async()=>{
+      const {data:entries}=await supabase.from('brackets').select('id,name').eq('pool_id',pool.id).eq('user_id',user.id);
+      if(!entries?.length){if(live)setMyPicks([]);return;}
+      const {data:picks}=await supabase.from('bracket_picks').select('bracket_id,pick_key,team_id').in('bracket_id',entries.map(e=>e.id));
+      if(live)setMyPicks((picks??[]).map(p=>({...p,entry_name:entries.find(e=>e.id===p.bracket_id)?.name??'My bracket'})));
+    };
+    void load();return()=>{live=false};
+  },[pool,user]);
   const byId = useMemo(() => new Map(teams.map(t => [t.id,t])), [teams]);
   if (!pool) return <PageShell title="NFL Playoff Schedule" eyebrow="Game center"><EmptyState title="Private pool access" body="Sign in and join your pool to see its playoff schedule." /></PageShell>;
   if (busy) return <Spinner label="Loading playoff schedule…" />;
@@ -103,7 +115,7 @@ export function SchedulePage() {
       return <section key={round}><SectionTitle>{labels[round]}</SectionTitle><div className="grid gap-3 md:grid-cols-2">{list.map(g => {
         const home = g.home_team_id ? byId.get(g.home_team_id) : undefined;
         const away = g.away_team_id ? byId.get(g.away_team_id) : undefined;
-        return <Card key={g.id} className="p-4"><div className="mb-3 flex items-center justify-between"><StatusPill status={g.status} /><span className="text-xs text-txt-muted">{g.kickoff ? new Date(g.kickoff).toLocaleString() : 'Kickoff TBD'}</span></div><div className="grid grid-cols-[1fr_auto] gap-3"><div className="space-y-3"><p className="font-semibold text-white">{away ? `#${away.seed} ${away.name}` : 'Away team TBD'}</p><p className="font-semibold text-white">{home ? `#${home.seed} ${home.name}` : 'Home team TBD'}</p></div><div className="text-right font-display text-2xl font-extrabold text-gold-400"><p>{g.away_score ?? '—'}</p><p>{g.home_score ?? '—'}</p></div></div></Card>;
+        return <Card key={g.id} className="p-4"><div className="mb-3 flex items-center justify-between"><StatusPill status={g.status} /><span className="text-xs text-txt-muted">{g.kickoff ? new Date(g.kickoff).toLocaleString() : 'Kickoff TBD'}</span></div><div className="grid grid-cols-[1fr_auto] gap-3"><div className="space-y-3"><p className="font-semibold text-white">{away ? `#${away.seed} ${away.name}` : 'Away team TBD'}</p><p className="font-semibold text-white">{home ? `#${home.seed} ${home.name}` : 'Home team TBD'}</p></div><div className="text-right font-display text-2xl font-extrabold text-gold-400"><p>{g.away_score ?? '—'}</p><p>{g.home_score ?? '—'}</p></div></div>{myPicks.filter(p=>p.pick_key===g.id).length>0 && <div className="mt-3 border-t border-white/10 pt-3">{myPicks.filter(p=>p.pick_key===g.id).map(p=><div key={p.bracket_id} className="flex items-center justify-between gap-2 py-1 text-xs"><span className="truncate text-txt-secondary">{p.entry_name}: <b className="text-white">{byId.get(p.team_id)?.name??'Selected team'}</b></span><span className={g.status==='final'?(g.winner_team_id===p.team_id?'text-green-400':'text-red-400'):'text-amber-300'}>{g.status==='final'?(g.winner_team_id===p.team_id?'Correct pick':'Incorrect pick'):'Pending'}</span></div>)}</div>}</Card>;
       })}</div></section>;
     })}</div>}
     <p className="mt-5 text-xs text-txt-muted">The ESPN scoreboard is a third-party, undocumented public feed and may change without notice. Final pool scoring is calculated from the commissioner-confirmed game results.</p>
