@@ -109,8 +109,10 @@ export default function Home({ setPage, onJoinClick }: Props) {
     })();
   }, [pool, user]);
 
-  const firstGame = games.filter((g) => g.kickoff).sort((a, b) => +new Date(a.kickoff!) - +new Date(b.kickoff!))[0];
-  const countdown = useCountdown(firstGame?.kickoff ?? null);
+  const nextGame = games.filter((g) => g.kickoff && g.status !== 'final' && new Date(g.kickoff).getTime() > Date.now()).sort((a, b) => +new Date(a.kickoff!) - +new Date(b.kickoff!))[0];
+  const countdown = useCountdown(nextGame?.kickoff ?? null);
+  const activeRound = (['wild_card','divisional','conference','super_bowl'] as const).find(round=>games.some(g=>g.round===round&&g.status!=='final'));
+  const roundLabel = activeRound ? ({wild_card:'Wild Card',divisional:'Divisional',conference:'Conference Championships',super_bowl:'Super Bowl'} as const)[activeRound] : games.length?'Postseason complete':'Awaiting playoff field';
   const upcoming = games
     .filter((g) => g.status !== 'final' && g.kickoff)
     .sort((a, b) => +new Date(a.kickoff!) - +new Date(b.kickoff!))
@@ -135,8 +137,9 @@ export default function Home({ setPage, onJoinClick }: Props) {
               <div className="flex items-center gap-3"><FileText className="h-7 w-7 text-amber-300"/><div><strong className="block text-xl text-white">{pool ? submitted : '—'}</strong><span className="text-xs text-slate-300">Leaderboard entries</span></div></div>
               <div className="flex items-center gap-3"><Clock className="h-7 w-7 text-amber-300"/><div><strong className="block text-sm text-white">{pool?.deadline ? new Date(pool.deadline).toLocaleString(undefined,{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}) : 'Not set'}</strong><span className="text-xs text-slate-300">Pool deadline</span></div></div>
             </div>
-            {countdown && !countdown.over ? <div className="rounded-lg border border-amber-400/40 bg-black/75 px-5 py-2 text-center"><p className="text-[11px] font-bold uppercase tracking-widest text-amber-300">Playoffs kickoff in</p><div className="mt-1 flex gap-3">{[{v:countdown.days,l:'DAYS'},{v:countdown.hours,l:'HRS'},{v:countdown.mins,l:'MIN'},{v:countdown.secs,l:'SEC'}].map(t=><div key={t.l}><strong className="block font-display text-2xl text-white">{String(t.v).padStart(2,'0')}</strong><span className="text-[9px] text-amber-300">{t.l}</span></div>)}</div></div> : <div className="rounded-lg border border-amber-400/30 px-4 py-2 text-sm text-amber-200">{countdown?.over ? 'Playoffs underway' : 'Kickoff schedule pending'}</div>}
+            {countdown && !countdown.over ? <div className="rounded-lg border border-amber-400/40 bg-black/75 px-5 py-2 text-center"><p className="text-[11px] font-bold uppercase tracking-widest text-amber-300">Next playoff kickoff in</p><div className="mt-1 flex gap-3">{[{v:countdown.days,l:'DAYS'},{v:countdown.hours,l:'HRS'},{v:countdown.mins,l:'MIN'},{v:countdown.secs,l:'SEC'}].map(t=><div key={t.l}><strong className="block font-display text-2xl text-white">{String(t.v).padStart(2,'0')}</strong><span className="text-[9px] text-amber-300">{t.l}</span></div>)}</div></div> : <div className="rounded-lg border border-amber-400/30 px-4 py-2 text-sm text-amber-200">{countdown?.over ? 'Game underway' : 'Kickoff schedule pending'}</div>}
           </div>
+          <div className="mt-4 flex flex-wrap items-center gap-2 text-xs"><span className="rounded-full border border-amber-400/30 bg-black/60 px-3 py-1.5 font-semibold text-amber-200">Round: {roundLabel}</span><span className={`rounded-full border px-3 py-1.5 font-semibold ${pool?.deadline && new Date(pool.deadline).getTime()<=Date.now()?'border-red-400/40 bg-red-900/40 text-red-200':'border-green-400/30 bg-green-950/40 text-green-200'}`}>{!pool?'Join a pool for entries':pool.deadline && new Date(pool.deadline).getTime()<=Date.now()?'Entries closed':'Entries open'}</span></div>
           {!user && <div className="mt-5"><GoldButton onClick={onJoinClick}><Trophy className="h-4 w-4"/> Sign in / Enter pool</GoldButton></div>}
           {user && !pool && <div className="mt-5"><GoldButton onClick={onJoinClick}>Join private pool</GoldButton></div>}
         </div>
@@ -152,8 +155,8 @@ export default function Home({ setPage, onJoinClick }: Props) {
           <div className="gridiron-mobile-bracket p-3 sm:p-5 lg:hidden">
 <div className="mb-4 flex justify-center"><img src="https://a.espncdn.com/i/teamlogos/nfl/500/afc.png" alt="AFC" className="h-16 w-16 object-contain" /></div>
 <p className="mb-2 text-center text-xs text-amber-200">WILD CARD</p><MobileWildCard conference="AFC" teams={teams}/>
-<div className="my-3 text-center text-amber-300">↓</div>
-<p className="mb-2 text-center text-xs text-amber-200">DIVISIONAL</p><div className="grid grid-cols-2 gap-2"><BracketRound conference="AFC" round="divisional" games={games} teams={teamById}/></div>
+<div className="mx-auto my-2 h-9 w-px bg-gradient-to-b from-amber-400/20 via-amber-300 to-amber-400/20" aria-hidden="true"/>
+<p className="mb-2 text-center text-xs text-amber-200">DIVISIONAL</p><div className="grid grid-cols-2 gap-2 border-x border-amber-300/20 px-1"><BracketRound conference="AFC" round="divisional" games={games} teams={teamById}/></div>
 <div className="my-3 text-center text-amber-300">↓</div>
 <p className="mb-2 text-center text-xs text-amber-200">AFC CHAMPIONSHIP</p><div className="mx-auto max-w-64"><BracketRound conference="AFC" round="conference" games={games} teams={teamById} count={1}/></div>
 <div className="my-3 text-center text-amber-300">↓</div>
@@ -162,10 +165,10 @@ export default function Home({ setPage, onJoinClick }: Props) {
 <div className="grid grid-cols-2 gap-3">{(['AFC','NFC'] as const).map(conf => { const g=games.find(g=>g.round==='super_bowl'); const ids=[g?.home_team_id,g?.away_team_id]; const team=ids.map(id=>id?teamById.get(id):null).find(t=>t?.conference===conf)??null;return <div key={conf} className="gridiron-match flex flex-col items-center gap-2 rounded-lg border border-amber-300/30 p-3"><span className="text-xs font-bold text-amber-200">{conf} Champion</span><TeamLogo team={team}/><span className="text-xs text-white">{team?.name??'TBD'}</span></div>})}</div>
 <button onClick={()=>setPage('bracket')} className="mt-4 rounded-md border border-amber-300/50 px-4 py-2 text-xs font-bold text-amber-200">View bracket →</button>
 </div>
-<div className="my-3 text-center text-sky-300">↑</div>
+<div className="mx-auto my-2 h-9 w-px bg-gradient-to-b from-sky-400/20 via-sky-300 to-sky-400/20" aria-hidden="true"/>
 <p className="mb-2 text-center text-xs text-sky-200">NFC CHAMPIONSHIP</p><div className="mx-auto max-w-64"><BracketRound conference="NFC" round="conference" games={games} teams={teamById} count={1}/></div>
 <div className="my-3 text-center text-sky-300">↑</div>
-<p className="mb-2 text-center text-xs text-sky-200">DIVISIONAL</p><div className="grid grid-cols-2 gap-2"><BracketRound conference="NFC" round="divisional" games={games} teams={teamById}/></div>
+<p className="mb-2 text-center text-xs text-sky-200">DIVISIONAL</p><div className="grid grid-cols-2 gap-2 border-x border-sky-300/20 px-1"><BracketRound conference="NFC" round="divisional" games={games} teams={teamById}/></div>
 <div className="my-3 text-center text-sky-300">↑</div>
 <p className="mb-2 text-center text-xs text-sky-200">WILD CARD</p><MobileWildCard conference="NFC" teams={teams}/>
 <div className="mt-4 flex justify-center"><img src="https://a.espncdn.com/i/teamlogos/nfl/500/nfc.png" alt="NFC" className="h-16 w-16 object-contain" /></div>
