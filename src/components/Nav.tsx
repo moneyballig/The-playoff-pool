@@ -9,7 +9,7 @@ const NAV_ITEMS: { id: PageId; label: string; icon: typeof Trophy }[] = [
   { id: 'bracket', label: 'Playoff Bracket', icon: Trophy },
   { id: 'entries', label: 'My Entries', icon: FileText },
   { id: 'leaderboard', label: 'Leaderboard', icon: ListOrdered },
-  { id: 'schedule', label: 'Schedule', icon: CalendarDays },
+  { id: 'schedule', label: 'NFL Playoff Schedule', icon: CalendarDays },
 ];
 
 interface Props {
@@ -32,7 +32,7 @@ export default function Nav({ page, setPage, onAuthClick }: Props) {
   };
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-navy-950/85 backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-white/10 bg-[#030a18]/95 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4">
         <button onClick={() => go('home')} className="flex items-center gap-2.5">
           <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-b from-gold-400 to-gold-600 shadow-glow-soft">
@@ -55,7 +55,7 @@ export default function Nav({ page, setPage, onAuthClick }: Props) {
               onClick={() => go(item.id)}
               className={`rounded-lg px-3 py-2 font-display text-sm font-semibold uppercase tracking-wide transition ${
                 page === item.id
-                  ? 'bg-white/10 text-gold-400'
+                  ? 'border border-amber-400/60 bg-amber-400/15 text-amber-200 shadow-glow-soft'
                   : 'text-txt-secondary hover:bg-white/5 hover:text-white'
               }`}
             >
