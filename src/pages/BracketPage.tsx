@@ -198,14 +198,19 @@ export default function BracketPage({ bracketId, onOpenEntries }: Props) {
     if (!bracket || locked || pickCount < 13) return;
     setError(null);
     const tb = parseInt(tiebreaker, 10);
+    setSaving(true);
+    const { error: saveError } = await supabase.rpc('pp_save_picks', { p_bracket: bracket.id, p_picks: validPicks(buildBracket(teams, games, picks)) });
+    if (saveError) { setError(saveError.message); setSaving(false); return; }
     const { error: err } = await supabase.rpc('pp_submit_bracket', {
       p_bracket: bracket.id,
       p_tiebreaker: pool?.tiebreaker_enabled && !isNaN(tb) ? tb : null,
     });
     if (err) {
       setError(err.message ?? 'Could not submit');
+      setSaving(false);
       return;
     }
+    setSaving(false);
     setSubmitOpen(false);
     const { data: b } = await supabase.from('brackets').select('*').eq('id', bracket.id).maybeSingle();
     setBracket(b ?? null);
@@ -424,7 +429,7 @@ export default function BracketPage({ bracketId, onOpenEntries }: Props) {
           {error && <p className="mt-3 rounded-lg border border-livered/30 bg-livered/10 px-3 py-2 text-sm text-livered">{error}</p>}
           <div className="mt-5 flex justify-end gap-3">
             <GhostButton onClick={() => setSubmitOpen(false)}>Keep editing</GhostButton>
-            <GoldButton onClick={submit}>Lock & submit</GoldButton>
+            <GoldButton onClick={submit} disabled={saving}>{saving?'Submitting…':'Lock & submit'}</GoldButton>
           </div>
         </Modal>
       )}
