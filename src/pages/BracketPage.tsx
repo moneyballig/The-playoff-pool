@@ -165,8 +165,8 @@ export default function BracketPage({ bracketId, onOpenEntries }: Props) {
   const derived: DerivedBracket = useMemo(() => buildBracket(teams, games, picks), [teams, games, picks]);
   const matchups = useMemo(() => allMatchups(derived), [derived]);
   const pickCount = matchups.filter((m) => m.winner).length;
-  const locked = !bracket || bracket.frozen;
-  const deadlinePassed = pool?.deadline ? new Date(pool.deadline).getTime() < Date.now() : false;
+  const deadlinePassed = pool?.deadline ? new Date(pool.deadline).getTime() <= Date.now() : false;
+  const locked = !bracket || bracket.frozen || bracket.submitted || deadlinePassed;
 
   const handlePick = (key: string, teamId: string) => {
     if (locked) return;
@@ -178,7 +178,7 @@ export default function BracketPage({ bracketId, onOpenEntries }: Props) {
     setSaving(true);
     setError(null);
     const payload = validPicks(buildBracket(teams, games, picks));
-    const { data: err } = await supabase.rpc('pp_save_picks', { p_bracket: bracket.id, p_picks: payload });
+    const { error: err } = await supabase.rpc('pp_save_picks', { p_bracket: bracket.id, p_picks: payload });
     if (err) setError(err.message ?? 'Could not save picks');
     else setSavedAt(new Date().toLocaleTimeString());
     setSaving(false);
@@ -195,10 +195,10 @@ export default function BracketPage({ bracketId, onOpenEntries }: Props) {
   }, [picks]);
 
   const submit = async () => {
-    if (!bracket) return;
+    if (!bracket || locked || pickCount < 13) return;
     setError(null);
     const tb = parseInt(tiebreaker, 10);
-    const { data: err } = await supabase.rpc('pp_submit_bracket', {
+    const { error: err } = await supabase.rpc('pp_submit_bracket', {
       p_bracket: bracket.id,
       p_tiebreaker: pool?.tiebreaker_enabled && !isNaN(tb) ? tb : null,
     });
@@ -289,7 +289,7 @@ export default function BracketPage({ bracketId, onOpenEntries }: Props) {
         </div>
       </div>
 
-      {deadlinePassed && !locked && (
+      {deadlinePassed && bracket && !bracket.frozen && !bracket.submitted && (
         <div className="mb-4 rounded-lg border border-livered/30 bg-livered/10 px-4 py-2.5 text-sm text-livered">
           The submission deadline has passed. Your bracket cannot be submitted.
         </div>
@@ -298,6 +298,7 @@ export default function BracketPage({ bracketId, onOpenEntries }: Props) {
         <div className="mb-4 rounded-lg border border-livered/30 bg-livered/10 px-4 py-2.5 text-sm text-livered">{error}</div>
       )}
 
+      <div className="mb-4 overflow-hidden rounded-lg border border-white/10 bg-navy-900/70 p-3"><div className="mb-2 flex justify-between text-xs font-semibold text-white"><span>Bracket completion</span><span>{pickCount}/13 picks</span></div><div className="h-2 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-gold-400 transition-all" style={{width:Math.min(100,pickCount/13*100)+'%'}}/></div><p className="mt-2 text-xs text-txt-muted">{deadlinePassed?'Entry deadline passed':bracket?.submitted?'Your bracket is submitted':pickCount===13?'All picks complete — ready to submit':'Select each winner to advance your bracket'}</p></div>
       <div className="mb-4 flex items-center gap-2 rounded-lg border border-white/10 bg-navy-900/70 px-4 py-2.5 text-xs text-txt-secondary">
         <Info className="h-4 w-4 shrink-0 text-gold-400" />
         <span>
