@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  Trophy, ChevronRight, Users, FileText, Megaphone, Clock, Lock,
-  Swords, Plus, Medal,
+  Trophy, ChevronRight, Users, FileText, Megaphone, Clock,
+  Plus, Medal,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
@@ -105,7 +105,7 @@ export default function Home({ setPage, onJoinClick }: Props) {
     .sort((a, b) => +new Date(a.kickoff!) - +new Date(b.kickoff!))
     .slice(0, 3);
   const teamById = useMemo(() => new Map(teams.map((t) => [t.id, t])), [teams]);
-  const deadlinePassed = pool?.deadline ? new Date(pool.deadline).getTime() < Date.now() : false;
+
 
   if (loading) return <Spinner label="Loading pool…" />;
 
