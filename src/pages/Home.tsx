@@ -110,7 +110,7 @@ export default function Home({ setPage, onJoinClick }: Props) {
         <div className="gridiron-hero-shade absolute inset-0" />
         <div className="relative mx-auto max-w-[1500px] px-4 pb-8 pt-12 sm:px-7 sm:pt-16">
           <p className="font-display text-sm font-bold uppercase tracking-[0.3em] text-amber-300">The road to the championship</p>
-          <h1 className="gridiron-title mt-3 font-display text-5xl font-extrabold uppercase leading-none text-white sm:text-7xl lg:text-8xl">{pool?.season ?? 2026} NFL PLAYOFFS</h1>
+          <h1 className="gridiron-title mt-3 font-display text-5xl font-extrabold uppercase leading-none text-white sm:text-7xl lg:text-8xl">{pool?.season ?? 2026}-27 NFL PLAYOFFS</h1>
           <p className="gridiron-subtitle mt-2 font-display text-xl font-bold uppercase tracking-wider text-amber-300 sm:text-3xl">Make your picks. Claim the glory.</p>
           <div className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-amber-300/30 bg-[#030a18]/85 p-4 shadow-2xl backdrop-blur-md">
             <div className="flex flex-wrap items-center gap-5 sm:gap-9">
