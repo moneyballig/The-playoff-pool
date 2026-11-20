@@ -15,7 +15,7 @@ function EntriesPage({ onOpenBracket, onJoin }: { onOpenBracket: (id: string) =>
   const [brackets, setBrackets] = useState<Bracket[]>([]);
   const [pickCounts, setPickCounts] = useState<Record<string,number>>({});
   const [eliminatedCounts, setEliminatedCounts] = useState<Record<string,number>>({});
-  const [remainingPoints, setRemainingPoints] = useState<number>(30);
+  const [maxPossible, setMaxPossible] = useState<Record<string,number>>({});
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
@@ -51,10 +51,33 @@ function EntriesPage({ onOpenBracket, onJoin }: { onOpenBracket: (id: string) =>
           if(finished.has(p.pick_key)&&finished.get(p.pick_key)!==p.team_id)losses[p.bracket_id]=(losses[p.bracket_id]??0)+1;
         });
         setPickCounts(counts);setEliminatedCounts(losses);
-        const pointsByRound:Record<string,number>={wild_card:1,divisional:2,conference:4,super_bowl:8};
-        const {data:allGames}=await supabase.from('playoff_games').select('round,status').eq('season',pool.season);
+        const {data:allGames}=await supabase.from('playoff_games').select('id,round,conference,status,winner_team_id,home_team_id,away_team_id').eq('season',pool.season);
+        const {data:allTeams}=await supabase.from('playoff_teams').select('id,seed').eq('season',pool.season);
         if(!active)return;
-        setRemainingPoints(allGames?.length ? allGames.filter(g=>g.status!=='final').reduce((sum,g)=>sum+(pointsByRound[g.round]??0),0) : 30);
+        const seedMap=new Map((allTeams??[]).map(t=>[t.id,t.seed]));
+        const eliminated=new Set<string>();
+        const finalKeys=new Set<string>();
+        const pointsByRound:Record<string,number>={wild_card:1,divisional:2,conference:4,super_bowl:8};
+        for(const g of allGames??[]){
+          if(g.status!=='final'||!g.winner_team_id)continue;
+          const key=g.round==='wild_card'?g.id:g.round==='divisional'
+            ?'div-'+g.conference+'-'+(seedMap.get(g.home_team_id??'')===1||seedMap.get(g.away_team_id??'')===1?'1':'2')
+            :g.round==='conference'?'conf-'+g.conference:'sb';
+          finalKeys.add(key);
+          if(g.home_team_id&&g.home_team_id!==g.winner_team_id)eliminated.add(g.home_team_id);
+          if(g.away_team_id&&g.away_team_id!==g.winner_team_id)eliminated.add(g.away_team_id);
+        }
+        const possible:Record<string,number>={};
+        for(const entry of data){
+          let ceiling=entry.total_points;
+          for(const p of (picks??[]).filter(p=>p.bracket_id===entry.id)){
+            if(finalKeys.has(p.pick_key)||eliminated.has(p.team_id))continue;
+            const round=p.pick_key.startsWith('div-')?'divisional':p.pick_key.startsWith('conf-')?'conference':p.pick_key==='sb'?'super_bowl':'wild_card';
+            ceiling+=pointsByRound[round];
+          }
+          possible[entry.id]=ceiling;
+        }
+        setMaxPossible(possible);
       }
       setLoading(false);
     }
@@ -116,7 +139,7 @@ function EntriesPage({ onOpenBracket, onJoin }: { onOpenBracket: (id: string) =>
               <p className="mt-1 text-sm text-txt-secondary">{bracket.total_points} points · {bracket.correct_picks} correct picks {bracket.rank?` · Rank #${bracket.rank}`:''}</p>
                <div className="mt-4"><div className="mb-1.5 flex justify-between text-[11px] font-semibold text-txt-secondary"><span>Predictions saved</span><span>{pickCounts[bracket.id]??0}/13</span></div><div className="h-2 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-gold-400 transition-all" style={{width:Math.min(100,(pickCounts[bracket.id]??0)/13*100)+'%'}}/></div></div>
                {bracket.submitted && <p className="mt-3 text-xs text-txt-secondary">{eliminatedCounts[bracket.id]??0} confirmed incorrect picks from finalized games · {bracket.correct_picks} correct</p>}
-               {bracket.submitted && <p className="mt-1 text-xs text-gold-400">Theoretical points ceiling: {bracket.total_points+remainingPoints} (before accounting for eliminated future picks)</p>}
+               {bracket.submitted && <p className="mt-1 text-xs text-gold-400">Maximum possible points: {maxPossible[bracket.id]??bracket.total_points} (based on remaining viable picks)</p>}
               <div className="mt-5"><GoldButton className="w-full" onClick={() => onOpenBracket(bracket.id)}><FileText className="h-4 w-4" />{bracket.submitted ? 'View bracket' : 'Open bracket'}<ChevronRight className="h-4 w-4" /></GoldButton></div>
             </Card>
           ))}
