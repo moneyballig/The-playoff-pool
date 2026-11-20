@@ -21,10 +21,10 @@ export function TeamLogo({ team, size = 36 }: { team: PlayoffTeam | null; size?:
       </div>
     );
   }
-  const initials = team.abbreviation.slice(0, 3);
+  const initials = team.abbreviation.slice(0, 3);\n  const logo = team.logo_url || `https://a.espncdn.com/i/teamlogos/nfl/500/${team.abbreviation.toLowerCase()}.png`;
   return (
     <div
-      className="rounded-full flex items-center justify-center font-display font-bold shrink-0 border"
+      className="team-logo rounded-full flex items-center justify-center font-display font-bold shrink-0 border"
       style={{
         width: size,
         height: size,
