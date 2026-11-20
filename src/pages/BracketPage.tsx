@@ -314,8 +314,9 @@ export default function BracketPage({ bracketId, onOpenEntries }: Props) {
 
       {/* Desktop bracket */}
       <div className="hidden gap-4 lg:flex">
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col justify-center gap-6">
           <RoundColumn title="AFC Wild Card" matchups={derived.afcWC} disabled={locked} onPick={handlePick} />
+          <RoundColumn title="NFC Wild Card" matchups={derived.nfcWC} disabled={locked} onPick={handlePick} />
         </div>
         <div className="flex flex-col justify-center gap-6">
           <RoundColumn title="AFC Divisional" matchups={derived.afcDiv} disabled={locked} onPick={handlePick} />
