@@ -56,7 +56,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setPool(null);
       setIsPoolAdmin(false);
     }
-    setIsPlatformAdmin(await supabase.rpc('pp_is_platform_admin'));
+    const { data: platformAdmin } = await supabase.rpc('pp_is_platform_admin');
+    setIsPlatformAdmin(Boolean(platformAdmin));
   };
 
   useEffect(() => {
