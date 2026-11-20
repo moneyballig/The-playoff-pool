@@ -67,3 +67,19 @@ body {
 .animate-pulse-live {
   animation: pulseLive 1.4s ease-in-out infinite;
 }
+
+
+/* Gridiron-inspired stadium presentation; no fake game data */
+.gridiron-hero {
+ background-color:#061124;
+ background-image:radial-gradient(ellipse at 52% 4%,rgba(75,111,205,.5),transparent 48%),linear-gradient(180deg,rgba(2,9,22,.2) 0%,rgba(2,9,22,.45) 55%,#040c1c 100%),url('https://images.unsplash.com/photo-1459865264687-595bb38e47ac?auto=format&fit=crop&w=2000&q=80');
+ background-position:center;
+ background-size:cover;
+}
+.gridiron-hero-shade {background:linear-gradient(90deg,rgba(3,10,23,.8),transparent 75%)}
+.gridiron-title {font-style:italic;letter-spacing:-.035em;text-shadow:0 3px 3px #030812,0 0 30px rgba(255,255,255,.35)}
+.gridiron-subtitle {font-style:italic;text-shadow:0 2px 6px #020817}
+.gridiron-panel {background:radial-gradient(ellipse at 50% 50%,#183153 0%,#08172e 52%,#030a18 100%);box-shadow:inset 0 0 40px rgba(8,15,30,.8),0 10px 35px rgba(0,0,0,.4)}
+.gridiron-match {background:linear-gradient(120deg,rgba(29,51,83,.95),rgba(8,19,39,.98));box-shadow:inset 0 1px rgba(255,255,255,.08)}
+.gridiron-bracket-scroll::-webkit-scrollbar {height:6px}
+.gridiron-bracket-scroll::-webkit-scrollbar-thumb {background:#bd944b;border-radius:5px}
