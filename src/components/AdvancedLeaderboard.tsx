@@ -7,6 +7,30 @@ import { Card, EmptyState, Spinner } from '@/components/ui';
 
 type Potential = {bracket_id:string;max_possible:number;remaining_points:number;incorrect_picks:number};
 type Sort = 'rank'|'possible'|'correct';
+function Podium({rows,userId}:{rows:LeaderboardRow[];userId?:string}) {
+ const positions=[rows[1],rows[0],rows[2]];
+ const heights=['h-24 sm:h-32','h-32 sm:h-44','h-20 sm:h-28'];
+ const colors=['border-slate-300/60 text-slate-200','border-amber-300/80 text-amber-300','border-orange-400/60 text-orange-300'];
+ return <section aria-label="Top three ranked brackets" className="mb-6 overflow-hidden rounded-2xl border border-gold-400/25 bg-gradient-to-b from-[#17263d] via-[#0b1729] to-[#070f1e] px-3 pb-5 pt-6 sm:px-8">
+  <div className="mb-5 text-center"><Crown className="mx-auto mb-1 h-6 w-6 text-gold-400"/><h2 className="font-display text-lg font-extrabold uppercase tracking-widest text-white">Top 3 Brackets</h2><p className="mt-1 text-xs text-txt-muted">The current leaders in your pool</p></div>
+  <div className="mx-auto grid max-w-3xl grid-cols-3 items-end gap-2 sm:gap-5">
+   {positions.map((entry,i)=>{
+    const rank=[2,1,3][i];const mine=entry?.user_id===userId;
+    return <div key={rank} className="flex min-w-0 flex-col items-center text-center">
+     <div className={`mb-2 flex h-12 w-12 items-center justify-center rounded-full border-2 bg-[#1b2c44] shadow-lg sm:h-16 sm:w-16 ${colors[i]}`}>{entry?<span className="font-display text-xl font-extrabold sm:text-2xl">{(entry.display_name||entry.entry_name).slice(0,1).toUpperCase()}</span>:<Trophy className="h-5 w-5 opacity-50"/>}</div>
+     <p className="w-full truncate text-xs font-bold text-white sm:text-sm">{entry?.display_name??'Open spot'}</p>
+     <p className="w-full truncate text-[10px] text-txt-muted sm:text-xs">{entry?.entry_name??'Awaiting entry'}</p>
+     <p className={`mb-3 mt-1 font-display text-base font-extrabold sm:text-xl ${rank===1?'text-amber-300':rank===2?'text-slate-200':'text-orange-300'}`}>{entry?entry.total_points+' pts':'—'}</p>
+     <div className={`relative flex w-full flex-col items-center justify-start rounded-t-xl border-x-2 border-t-2 bg-gradient-to-b from-white/15 to-white/[.03] pt-3 ${heights[i]} ${colors[i]} ${mine?'ring-2 ring-gold-400/40':''}`}>
+      {rank===1&&<Crown className="mb-1 h-5 w-5 text-amber-300"/>}
+      <span className="font-display text-4xl font-black sm:text-6xl">{rank}</span>
+      {mine&&<span className="mt-1 rounded bg-gold-400/20 px-1.5 py-0.5 text-[9px] font-bold text-gold-400">YOU</span>}
+     </div>
+    </div>;
+   })}
+  </div>
+ </section>;
+}
 export default function AdvancedLeaderboard() {
  const {pool,user}=useAuth();
  const [rows,setRows]=useState<LeaderboardRow[]>([]);
@@ -75,6 +99,8 @@ export default function AdvancedLeaderboard() {
    <Card className="p-4"><div className="mb-2 flex items-center gap-2 text-xs text-txt-muted"><Trophy className="h-4 w-4"/>Current leader</div><strong className="block truncate font-display text-base text-gold-400">{leader?.display_name??'—'}</strong><span className="text-xs text-txt-muted">{leader?leader.total_points+' pts':'No entries yet'}</span></Card>
    <Card className="col-span-2 p-4 sm:col-span-1"><div className="mb-2 flex items-center gap-2 text-xs text-txt-muted"><Target className="h-4 w-4"/>Your best rank</div><strong className="font-display text-2xl text-white">{myBest?.rank?'#'+myBest.rank:'—'}</strong><span className="ml-2 text-xs text-txt-muted">{myBest?.entry_name??'Submit an entry'}</span></Card>
   </div>
+  {rows.length>0&&<Podium rows={rows} userId={user?.id}/>}
+  <h2 className="mb-3 font-display text-lg font-extrabold uppercase text-white">Full Standings <span className="ml-1 text-xs font-normal text-txt-muted">All ranks below the podium</span></h2>
   <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
    <div className="inline-flex rounded-lg border border-white/15 bg-white/5 p-1"><button type="button" onClick={()=>setOnlyMine(false)} className={`rounded-md px-3 py-2 text-xs font-bold ${!onlyMine?'bg-gold-400 text-navy-950':'text-txt-secondary'}`}>All entries</button><button type="button" onClick={()=>setOnlyMine(true)} className={`rounded-md px-3 py-2 text-xs font-bold ${onlyMine?'bg-gold-400 text-navy-950':'text-txt-secondary'}`}>My entries</button></div>
    <label className="flex items-center gap-2 text-xs text-txt-muted">Sort by <select value={sort} onChange={e=>setSort(e.target.value as Sort)} className="rounded-lg border border-white/15 bg-[#0b1c35] px-2 py-2 text-sm text-white"><option value="rank">Current rank</option><option value="possible">Max possible</option><option value="correct">Correct picks</option></select></label>
