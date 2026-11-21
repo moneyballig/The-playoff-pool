@@ -1,13 +1,15 @@
 import { useState } from 'react';
-import { Menu, X, Trophy, LayoutGrid, ListOrdered, CalendarDays, FileText, Shield, User as UserIcon, Ticket } from 'lucide-react';
+import { Menu, X, Trophy, LayoutGrid, ListOrdered, CalendarDays, FileText, BarChart3, Crown, Shield, User as UserIcon, Ticket } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 
-export type PageId = 'home' | 'bracket' | 'entries' | 'leaderboard' | 'schedule' | 'admin' | 'join';
+export type PageId = 'home' | 'bracket' | 'entries' | 'leaderboard' | 'dashboard' | 'champions' | 'schedule' | 'admin' | 'join';
 
 const NAV_ITEMS: { id: PageId; label: string; icon: typeof Trophy }[] = [
   { id: 'home', label: 'Home', icon: LayoutGrid },
   { id: 'entries', label: 'My Entries', icon: FileText },
   { id: 'leaderboard', label: 'Leaderboard', icon: ListOrdered },
+  { id: 'dashboard', label: 'My Dashboard', icon: BarChart3 },
+  { id: 'champions', label: 'Champion Stats', icon: Crown },
   { id: 'schedule', label: 'NFL Playoff Schedule', icon: CalendarDays },
 ];
 
@@ -47,12 +49,12 @@ export default function Nav({ page, setPage, onAuthClick }: Props) {
           </span>
         </button>
 
-        <nav className="hidden items-center gap-1 md:flex">
+        <nav className="hidden items-center gap-0.5 xl:flex">
           {items.map((item) => (
             <button
               key={item.id}
               onClick={() => go(item.id)}
-              className={`rounded-lg px-3 py-2 font-display text-sm font-semibold uppercase tracking-wide transition ${
+              className={`rounded-lg px-2 py-2 font-display text-xs font-semibold uppercase tracking-wide transition ${
                 page === item.id
                   ? 'border border-amber-400/60 bg-amber-400/15 text-amber-200 shadow-glow-soft'
                   : 'text-txt-secondary hover:bg-white/5 hover:text-white'
@@ -108,7 +110,7 @@ export default function Nav({ page, setPage, onAuthClick }: Props) {
             </button>
           )}
           <button
-            className="rounded-lg border border-white/10 bg-white/5 p-2 text-txt-secondary md:hidden"
+            className="rounded-lg border border-white/10 bg-white/5 p-2 text-txt-secondary xl:hidden"
             onClick={() => setOpen((v) => !v)}
             aria-label="Menu"
           >
