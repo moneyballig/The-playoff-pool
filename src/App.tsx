@@ -96,10 +96,10 @@ function EntriesPage({ onOpenBracket, onJoin }: { onOpenBracket: (id: string) =>
   };
 
   const createBracket = async () => {
-    if (!user || !pool || brackets.length >= 2 || creating) return;
+    if (!user || !pool || brackets.length >= 1 || creating) return;
     setCreating(true);
     setError('');
-    const nextNumber = brackets.length === 0 ? 1 : 2;
+    const nextNumber = 1;
     const { data: createdId, error: insertError } = await supabase.rpc('pp_create_bracket', {
       p_pool: pool.id, p_entry: nextNumber, p_name: `Bracket ${nextNumber}`
     });
@@ -126,8 +126,8 @@ function EntriesPage({ onOpenBracket, onJoin }: { onOpenBracket: (id: string) =>
   return (
     <main className="mx-auto max-w-5xl px-4 py-10">
       <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
-        <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-gold-400">Your competition</p><h1 className="mt-1 font-display text-3xl font-extrabold uppercase text-white">My Entries</h1><p className="mt-1 text-sm text-txt-secondary">Create up to two independent playoff brackets.</p></div>
-        <GoldButton onClick={createBracket} disabled={brackets.length >= 2 || creating}><Plus className="h-4 w-4" />{creating ? 'Creating…' : brackets.length >= 2 ? '2 of 2 created' : 'Create bracket'}</GoldButton>
+        <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-gold-400">Your competition</p><h1 className="mt-1 font-display text-3xl font-extrabold uppercase text-white">My Entries</h1><p className="mt-1 text-sm text-txt-secondary">Create one playoff bracket per participant.</p></div>
+        <GoldButton onClick={createBracket} disabled={brackets.length >= 1 || creating}><Plus className="h-4 w-4" />{creating ? 'Creating…' : brackets.length >= 1 ? '1 of 1 created' : 'Create bracket'}</GoldButton>
       </div>
       {error && <p className="mb-4 rounded-lg border border-livered/30 bg-livered/10 px-4 py-3 text-sm text-livered">{error}</p>}
       {brackets.length === 0 ? <EmptyState title="No brackets yet" body="Create your first bracket to start making your 13 playoff picks." action={<GoldButton onClick={createBracket} disabled={creating}><Plus className="h-4 w-4" />Create first bracket</GoldButton>} /> : (
