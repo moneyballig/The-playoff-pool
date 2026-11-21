@@ -59,8 +59,24 @@ export default function Home({ setPage, onJoinClick }: Props) {
 
   useEffect(() => {
     if (!pool) {
-      setLoading(false);
-      return;
+      // The public bracket must load independently of private pool membership.
+      // Only public playoff teams and game matchups are requested for guests.
+      let cancelled = false;
+      setLoading(true);
+      Promise.all([
+        supabase.from('playoff_games').select('*').eq('season', 2026).order('game_slot'),
+        supabase.from('playoff_teams').select('*').eq('season', 2026),
+      ]).then(([g, t]) => {
+        if (cancelled) return;
+        setGames(g.data ?? []);
+        setTeams(t.data ?? []);
+        setBrackets([]);
+        setLeaders([]);
+        setMembers(0);
+        setSubmitted(0);
+        setLoading(false);
+      }).catch(() => { if (!cancelled) setLoading(false); });
+      return () => { cancelled = true; };
     }
     (async () => {
       setLoading(true);
