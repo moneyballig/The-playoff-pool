@@ -94,11 +94,6 @@ export default function AdvancedLeaderboard() {
    <span className="inline-flex items-center gap-2 text-xs text-txt-muted"><RefreshCw className={`h-4 w-4 ${refreshing?'animate-spin':''}`}/>{updated?'Updated '+updated.toLocaleTimeString():'Waiting for scores'}</span>
   </div>
   {error&&<p role="alert" className="mb-4 rounded-lg border border-amber-400/30 bg-amber-400/10 p-3 text-sm text-amber-200">{error}</p>}
-  <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
-   <Card className="p-4"><div className="mb-2 flex items-center gap-2 text-xs text-txt-muted"><Users className="h-4 w-4"/>Submitted entries</div><strong className="font-display text-2xl text-white">{rows.length}</strong></Card>
-   <Card className="p-4"><div className="mb-2 flex items-center gap-2 text-xs text-txt-muted"><Trophy className="h-4 w-4"/>Current leader</div><strong className="block truncate font-display text-base text-gold-400">{leader?.display_name??'—'}</strong><span className="text-xs text-txt-muted">{leader?leader.total_points+' pts':'No entries yet'}</span></Card>
-   <Card className="col-span-2 p-4 sm:col-span-1"><div className="mb-2 flex items-center gap-2 text-xs text-txt-muted"><Target className="h-4 w-4"/>Your best rank</div><strong className="font-display text-2xl text-white">{myBest?.rank?'#'+myBest.rank:'—'}</strong><span className="ml-2 text-xs text-txt-muted">{myBest?.entry_name??'Submit an entry'}</span></Card>
-  </div>
   {rows.length>0&&<Podium rows={rows} userId={user?.id}/>}
   <h2 className="mb-3 font-display text-lg font-extrabold uppercase text-white">Full Standings <span className="ml-1 text-xs font-normal text-txt-muted">All ranks below the podium</span></h2>
   <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
