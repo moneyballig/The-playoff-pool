@@ -5,6 +5,8 @@ import { supabase, supabaseConfigured } from '@/lib/supabase';
 import type { Bracket } from '@/lib/types';
 import Nav, { type PageId } from '@/components/Nav';
 import Home from '@/pages/Home';
+import PersonalDashboard from '@/pages/PersonalDashboard';
+import ChampionStatistics from '@/pages/ChampionStatistics';
 import { LeaderboardPage, SchedulePage, AdminPage } from '@/pages/CompetitionPages';
 import AuthModal, { JoinPoolModal } from '@/components/Modals';
 import { Card, GoldButton, GhostButton, EmptyState, Spinner } from '@/components/ui';
@@ -150,6 +152,8 @@ function EntriesPage({ onOpenBracket, onJoin }: { onOpenBracket: (id: string) =>
 
 function InfoPage({ page }: { page: PageId }) {
   if (page === 'leaderboard') return <LeaderboardPage />;
+  if (page === 'dashboard') return <PersonalDashboard />;
+  if (page === 'champions') return <ChampionStatistics />;
   if (page === 'schedule') return <SchedulePage />;
   if (page === 'admin') return <AdminPage />;
   return <main className="mx-auto max-w-4xl px-4 py-20"><section className="rounded-2xl border border-white/10 bg-card-sheen px-6 py-14 text-center shadow-card"><Trophy className="mx-auto mb-4 h-10 w-10 text-gold-400" /><h1 className="font-display text-3xl font-extrabold uppercase tracking-wide text-white">Join the Pool</h1><p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-txt-secondary">Sign in and enter your private invitation code to participate.</p></section></main>;
