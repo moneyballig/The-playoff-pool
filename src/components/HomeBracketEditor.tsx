@@ -119,5 +119,28 @@ export default function HomeBracketEditor({teams,games,brackets,onJoinClick,onEn
     <div className="flex flex-wrap gap-3"><button type="button" disabled={locked||busy} onClick={()=>void persist(false)} className="inline-flex items-center gap-2 rounded-lg border border-amber-300/50 px-4 py-2 text-sm font-bold text-amber-200 disabled:opacity-40"><Save className="h-4 w-4"/>Save picks</button><GoldButton disabled={locked||busy||count!==13} onClick={()=>void persist(true)}><Trophy className="h-4 w-4"/>{active.submitted||submittedIds.includes(active.id)?'Resubmit bracket':'Submit bracket'}</GoldButton></div>
    </div>}
   </div>
+  <section aria-labelledby="scoring-rules-heading" className="mt-5 overflow-hidden rounded-xl border border-amber-300/30 bg-[#08172d] px-4 py-5 sm:px-7 sm:py-6">
+   <div className="mb-4 flex flex-wrap items-center gap-3">
+    <Trophy className="h-6 w-6 text-amber-300" aria-hidden="true"/>
+    <div><h2 id="scoring-rules-heading" className="font-display text-lg font-extrabold uppercase tracking-wide text-white sm:text-xl">How bracket scoring works</h2><p className="mt-1 text-xs text-slate-300">Earn more points for correct picks as the playoffs progress.</p></div>
+   </div>
+   <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
+    {[
+     {round:'Wild Card',points:1,games:6},
+     {round:'Divisional',points:2,games:4},
+     {round:'Conference',points:4,games:2},
+     {round:'Super Bowl',points:8,games:1},
+    ].map(item=><div key={item.round} className="rounded-lg border border-white/15 bg-[#11243e] p-3 text-center sm:p-4">
+      <p className="text-[11px] font-bold uppercase tracking-wide text-amber-200 sm:text-xs">{item.round}</p>
+      <p className="mt-2 font-display text-3xl font-extrabold text-white">{item.points}<span className="ml-1 text-xs font-medium text-slate-300">{item.points===1?'pt':'pts'}</span></p>
+      <p className="mt-1 text-[11px] text-slate-400">per correct pick · {item.games} {item.games===1?'game':'games'}</p>
+    </div>)}
+   </div>
+   <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-4">
+    <p className="text-sm font-bold text-amber-200">Maximum possible score: <span className="text-white">30 points</span></p>
+    <p className="text-xs text-slate-300">13 total predictions · 1 point for each correct Wild Card pick</p>
+   </div>
+   <p className="mt-3 text-xs leading-relaxed text-slate-300">Points are awarded for correctly predicting the winner of each playoff game. The Super Bowl combined-points prediction is used as a tiebreaker, not as extra points. Your bracket can be edited and resubmitted until the entry deadline.</p>
+  </section>
  </section>;
 }
