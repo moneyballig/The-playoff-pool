@@ -55,7 +55,7 @@ export default function PersonalDashboard(){
   <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
    {[
     {label:'Best rank',value:best?.rank?'#'+best.rank:'—',icon:Crown},
-    {label:'Submitted entries',value:submitted.length+'/'+Math.max(2,entries.length),icon:Trophy},
+    {label:'Submitted entries',value:submitted.length+'/'+Math.max(1,entries.length),icon:Trophy},
     {label:'Best points',value:submitted.length?Math.max(...submitted.map(e=>e.total_points)):0,icon:Target},
     {label:'Best possible',value:submitted.length?Math.max(...submitted.map(e=>e.potential?.max_possible??e.total_points)):0,icon:TrendingUp}
    ].map(stat=><Card key={stat.label} className="p-4"><stat.icon className="mb-2 h-5 w-5 text-gold-400"/><p className="text-xs text-txt-muted">{stat.label}</p><strong className="mt-1 block font-display text-2xl text-white">{stat.value}</strong></Card>)}
